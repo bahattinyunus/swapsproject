@@ -1543,10 +1543,300 @@ app.delete('/matches/:id', authenticateToken, async (req, res) => {
 });
 
 // ============================================
+// USER SKILLS API - KULLANICI BECERİ YÖNETİMİ
+// ============================================
+
+// 28. KULLANICININ BECERİLERİNİ GETIR (GET /user-skills/:userId)
+app.get('/user-skills/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ message: 'Kullanici ID gereklidir.' });
+        }
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            // In-memory için basit bir yapı kullanabiliriz (ileride eklenebilir)
+            return res.status(200).json({
+                success: true,
+                message: 'In-memory modda User_Skill desteklenmiyor',
+                offering: [],
+                seeking: []
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            const sql = `
+                SELECT 
+                    us.id,
+                    us.user_id,
+                    us.skill_id,
+                    us.type,
+                    us.olusturulma_tarihi,
+                    y.name as skill_name,
+                    y.category as skill_category
+                FROM User_Skill us
+                JOIN Yetenekler y ON us.skill_id = y.id
+                WHERE us.user_id = $1
+                ORDER BY us.type, y.category, y.name
+            `;
+
+            const results = await db.query(sql, [userId]);
+
+            // Offering ve Seeking olarak ayır
+            const offering = results.rows.filter(row => row.type === 'Offering');
+            const seeking = results.rows.filter(row => row.type === 'Seeking');
+
+            res.status(200).json({
+                success: true,
+                offering: offering,
+                seeking: seeking
+            });
+
+        } catch (dbError) {
+            console.error('Kullanici becerileri getirilemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('User skills getirme hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 29. KULLANICIYA BECERİ EKLE (POST /user-skills)
+app.post('/user-skills', authenticateToken, async (req, res) => {
+    try {
+        const { skill_id, type } = req.body;
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si
+
+        // Validasyon
+        if (!skill_id || !type) {
+            return res.status(400).json({ message: 'skill_id ve type gereklidir.' });
+        }
+
+        if (!['Offering', 'Seeking'].includes(type)) {
+            return res.status(400).json({ message: 'type sadece "Offering" veya "Seeking" olabilir.' });
+        }
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            return res.status(501).json({
+                success: false,
+                message: 'In-memory modda User_Skill desteklenmiyor. PostgreSQL gerekli.'
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            const sql = `
+                INSERT INTO User_Skill (user_id, skill_id, type) 
+                VALUES ($1, $2, $3) 
+                RETURNING *
+            `;
+
+            const result = await db.query(sql, [user_id, skill_id, type]);
+
+            res.status(201).json({
+                success: true,
+                message: 'Beceri basariyla eklendi!',
+                user_skill: result.rows[0]
+            });
+
+        } catch (dbError) {
+            // UNIQUE constraint violation
+            if (dbError.code === '23505') {
+                return res.status(400).json({ message: 'Bu beceri zaten ekli.' });
+            }
+            // Foreign key violation
+            if (dbError.code === '23503') {
+                return res.status(400).json({ message: 'Gecersiz skill_id veya user_id.' });
+            }
+            console.error('Beceri eklenemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('User skill ekleme hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 30. KULLANICIDAN BECERİ SİL (DELETE /user-skills/:id)
+app.delete('/user-skills/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params; // user_skill id
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            return res.status(501).json({
+                success: false,
+                message: 'In-memory modda User_Skill desteklenmiyor. PostgreSQL gerekli.'
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            // Önce bu becerinin bu kullanıcıya ait olup olmadığını kontrol et
+            const checkQuery = 'SELECT user_id FROM User_Skill WHERE id = $1';
+            const checkResult = await db.query(checkQuery, [id]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: 'Beceri bulunamadi.' });
+            }
+
+            // Sadece kendi becerisini silebilir
+            if (checkResult.rows[0].user_id != user_id) {
+                return res.status(403).json({ 
+                    message: 'Bu beceriyi silme yetkiniz yok.' 
+                });
+            }
+
+            // Beceriyi sil
+            const deleteQuery = 'DELETE FROM User_Skill WHERE id = $1';
+            await db.query(deleteQuery, [id]);
+
+            res.status(200).json({
+                success: true,
+                message: 'Beceri silindi!'
+            });
+
+        } catch (dbError) {
+            console.error('Beceri silinemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('User skill silme hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// ============================================
+// SWAPS API - KARŞILIKLI EŞLEŞME (RECIPROCAL MATCHING)
+// ============================================
+
+// 31. KARŞILIKLI EŞLEŞME - RECIPROCAL MATCHING (GET /swaps/reciprocal)
+// Token'dan gelen kullanıcı için, iki yönlü beceri eşleşmesi olan kullanıcıları listeler
+// Mantık:
+// - Kullanıcı A'nın Seeking becerileri = Kullanıcı B'nin Offering becerileri
+// - Kullanıcı B'nin Seeking becerileri = Kullanıcı A'nın Offering becerileri
+app.get('/swaps/reciprocal', authenticateToken, async (req, res) => {
+    try {
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si (Kullanıcı A)
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            return res.status(501).json({
+                success: false,
+                message: 'Reciprocal matching sadece PostgreSQL ile destekleniyor.',
+                matches: []
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            // Karmaşık SQL sorgusu: İki yönlü eşleşme
+            const sql = `
+                SELECT DISTINCT
+                    u.id,
+                    u.kullanici_adi,
+                    u.email,
+                    u.olusturulma_tarihi,
+                    -- A'nın Seeking becerileri ve B'nin karşılayan Offering becerileri
+                    (
+                        SELECT json_agg(
+                            json_build_object(
+                                'skill_id', y.id,
+                                'skill_name', y.name,
+                                'skill_category', y.category
+                            )
+                        )
+                        FROM User_Skill us_a_seeking
+                        INNER JOIN User_Skill us_b_offering 
+                            ON us_a_seeking.skill_id = us_b_offering.skill_id
+                        INNER JOIN Yetenekler y 
+                            ON us_a_seeking.skill_id = y.id
+                        WHERE us_a_seeking.user_id = $1
+                        AND us_a_seeking.type = 'Seeking'
+                        AND us_b_offering.user_id = u.id
+                        AND us_b_offering.type = 'Offering'
+                    ) as matched_skills_a_needs,
+                    -- B'nin Seeking becerileri ve A'nın karşılayan Offering becerileri
+                    (
+                        SELECT json_agg(
+                            json_build_object(
+                                'skill_id', y.id,
+                                'skill_name', y.name,
+                                'skill_category', y.category
+                            )
+                        )
+                        FROM User_Skill us_b_seeking
+                        INNER JOIN User_Skill us_a_offering 
+                            ON us_b_seeking.skill_id = us_a_offering.skill_id
+                        INNER JOIN Yetenekler y 
+                            ON us_b_seeking.skill_id = y.id
+                        WHERE us_b_seeking.user_id = u.id
+                        AND us_b_seeking.type = 'Seeking'
+                        AND us_a_offering.user_id = $1
+                        AND us_a_offering.type = 'Offering'
+                    ) as matched_skills_b_needs
+                FROM Kullanicilar u
+                WHERE u.id != $1  -- Kendini eşleştirme
+                AND EXISTS (
+                    -- Koşul 1: A'nın Seeking becerileri, B'nin Offering becerileri ile eşleşiyor
+                    SELECT 1
+                    FROM User_Skill us_a_seeking
+                    INNER JOIN User_Skill us_b_offering 
+                        ON us_a_seeking.skill_id = us_b_offering.skill_id
+                    WHERE us_a_seeking.user_id = $1
+                    AND us_a_seeking.type = 'Seeking'
+                    AND us_b_offering.user_id = u.id
+                    AND us_b_offering.type = 'Offering'
+                )
+                AND EXISTS (
+                    -- Koşul 2: B'nin Seeking becerileri, A'nın Offering becerileri ile eşleşiyor
+                    SELECT 1
+                    FROM User_Skill us_b_seeking
+                    INNER JOIN User_Skill us_a_offering 
+                        ON us_b_seeking.skill_id = us_a_offering.skill_id
+                    WHERE us_b_seeking.user_id = u.id
+                    AND us_b_seeking.type = 'Seeking'
+                    AND us_a_offering.user_id = $1
+                    AND us_a_offering.type = 'Offering'
+                )
+                ORDER BY u.kullanici_adi
+            `;
+
+            const results = await db.query(sql, [user_id]);
+
+            res.status(200).json({
+                success: true,
+                message: 'Karsilikli eslesmeler basariyla getirildi!',
+                user_id: user_id,
+                matches_count: results.rows.length,
+                matches: results.rows
+            });
+
+        } catch (dbError) {
+            console.error('Reciprocal matching hatasi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Swaps reciprocal hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// ============================================
 // DASHBOARD TASKS API - GÖREV YÖNETİMİ
 // ============================================
 
-// 28. KULLANICI GÖREVLERİNİ LİSTELE (GET /user/tasks)
+// 32. KULLANICI GÖREVLERİNİ LİSTELE (GET /user/tasks)
 // Filter parametreleri: ongoing, offers, suggestions
 app.get('/user/tasks', authenticateToken, async (req, res) => {
     try {
@@ -1766,7 +2056,7 @@ app.get('/user/tasks', authenticateToken, async (req, res) => {
     }
 });
 
-// 29. Sunucuyu dinle
+// 33. Sunucuyu dinle
 app.listen(PORT, () => {
     console.log(`Sunucu http://localhost:${PORT} adresinde basariyla baslatildi.`);
 });

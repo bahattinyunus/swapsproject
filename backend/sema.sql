@@ -32,6 +32,31 @@ CREATE TABLE Yetenekler (
 
 CREATE INDEX idx_category ON Yetenekler(category);
 
+-- 2.5 User_Skill Tablosu (Kullanıcı Beceri İlişkisi: Offering/Seeking)
+CREATE TABLE User_Skill (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    skill_id INTEGER NOT NULL,
+    type VARCHAR(20) NOT NULL CHECK (type IN ('Offering', 'Seeking')),
+    olusturulma_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_user_skill_user
+        FOREIGN KEY(user_id) 
+        REFERENCES Kullanicilar(id)
+        ON DELETE CASCADE,
+        
+    CONSTRAINT fk_user_skill_skill
+        FOREIGN KEY(skill_id) 
+        REFERENCES Yetenekler(id)
+        ON DELETE CASCADE,
+        
+    CONSTRAINT unique_user_skill_type UNIQUE (user_id, skill_id, type)
+);
+
+CREATE INDEX idx_user_skill_user ON User_Skill(user_id);
+CREATE INDEX idx_user_skill_skill ON User_Skill(skill_id);
+CREATE INDEX idx_user_skill_type ON User_Skill(type);
+
 -- Varsayılan yetenekleri ekle
 INSERT INTO Yetenekler (name, category) VALUES
 ('İngilizce', 'Dil'),
