@@ -9,6 +9,18 @@ const jwt = require('jsonwebtoken');
 // PostgreSQL veritabanı bağlantısı
 const { initializeDatabase, createSchema, getConnection } = require('./config/database');
 
+// Helper fonksiyon: JWT token oluşturur
+function generateToken(userId, email, rol = 'user') {
+    const payload = {
+        id: userId,
+        email: email,
+        rol: rol
+    };
+    
+    // Token'ı oluştur (24 saat geçerli)
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
+}
+
 // Middleware: Gelen isteğin başlıklarında (headers) geçerli bir JWT (token) olup olmadığını kontrol eder.
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization']; // Token, 'Bearer <Token>' formatında gelir
@@ -26,8 +38,8 @@ function authenticateToken(req, res, next) {
             return res.status(403).json({ message: 'Token gecerli degil veya suresi dolmus.' });
         }
         
-        // Token geçerliyse, kullanıcı bilgilerini (kullanici_id, email, rol) isteğe ekle.
-        req.user = user;
+        // Token geçerliyse, kullanıcı bilgilerini (id, email, rol) isteğe ekle.
+        req.user = user; // user içinde: { id, email, rol }
         next(); // Bir sonraki fonksiyona/endpoint'e geçiş yap.
     });
 }
@@ -175,6 +187,9 @@ app.post('/api/auth/register', async (req, res) => {
             };
             inMemoryUsers.push(newUser);
 
+            // Gerçek JWT token oluştur
+            const token = generateToken(newUser.id, email, 'user');
+
             return res.status(201).json({ 
                 message: 'Kullanici basariyla olusturuldu! (TEST MODU - In-Memory)',
                 user: {
@@ -182,7 +197,7 @@ app.post('/api/auth/register', async (req, res) => {
                     username: kullanici_adi,
                     email: email
                 },
-                token: 'temp-token-' + newUser.id // Kayıt sonrası otomatik giriş için token
+                token: token
             });
         }
 
@@ -195,6 +210,9 @@ app.post('/api/auth/register', async (req, res) => {
             const result = await db.query(sql, [kullanici_adi, email, hashlenmisSifre]);
             const userId = result.rows[0].id;
             
+            // Gerçek JWT token oluştur
+            const token = generateToken(userId, email, 'user');
+            
             console.log('User created successfully in PostgreSQL');
             res.status(201).json({ 
                 message: 'Kullanici basariyla olusturuldu!',
@@ -203,7 +221,7 @@ app.post('/api/auth/register', async (req, res) => {
                     username: kullanici_adi,
                     email: email
                 },
-                token: 'temp-token-' + userId // Kayıt sonrası otomatik giriş için token
+                token: token
             });
         } catch (dbError) {
             if (dbError.code === '23505') { // PostgreSQL unique constraint violation
@@ -231,15 +249,18 @@ app.post('/api/auth/login', async (req, res) => {
 
         // Admin kontrolü
         if (email === 'admin1@gmail.com' && sifre === 'admin-1') {
+            // Gerçek JWT token oluştur (admin için)
+            const token = generateToken(999999, 'admin1@gmail.com', 'admin');
+            
             return res.status(200).json({
                 message: 'Admin girisi basarili!',
                 user: {
-                    id: 'admin',
+                    id: 999999,
                     username: 'Admin',
                     email: 'admin1@gmail.com',
                     role: 'admin'
                 },
-                token: 'admin-token-special'
+                token: token
             });
         }
 
@@ -258,6 +279,9 @@ app.post('/api/auth/login', async (req, res) => {
                 return res.status(401).json({ message: 'Email veya sifre hatali.' });
             }
 
+            // Gerçek JWT token oluştur
+            const token = generateToken(kullanici.id, kullanici.email, 'user');
+
             return res.status(200).json({
                 message: 'Giris basarili! (TEST MODU - In-Memory)',
                 user: {
@@ -266,7 +290,7 @@ app.post('/api/auth/login', async (req, res) => {
                     email: kullanici.email,
                     role: 'user'
                 },
-                token: 'temp-token-' + kullanici.id
+                token: token
             });
         }
 
@@ -287,16 +311,19 @@ app.post('/api/auth/login', async (req, res) => {
                 return res.status(401).json({ message: 'Email veya sifre hatali.' });
             }
 
-            // Başarılı giriş - token olmadan basit response (ileride JWT eklenebilir)
+            // Gerçek JWT token oluştur
+            const token = generateToken(kullanici.id, kullanici.email, kullanici.rol || 'user');
+
+            // Başarılı giriş - gerçek JWT token ile
             res.status(200).json({
                 message: 'Giris basarili!',
                 user: {
                     id: kullanici.id,
                     username: kullanici.kullanici_adi,
                     email: kullanici.email,
-                    role: 'user'
+                    role: kullanici.rol || 'user'
                 },
-                token: 'temp-token-' + kullanici.id // Geçici token, ileride JWT ile değiştirilebilir
+                token: token
             });
         } catch (dbError) {
             console.error('Veritabani sorgusu sirasinda hata:', dbError);
@@ -758,7 +785,7 @@ app.get('/api/categories', async (req, res) => {
 app.post('/matches', authenticateToken, async (req, res) => {
     try {
         const { project_id } = req.body;
-        const applicant_id = req.user.kullanici_id; // Token'dan gelen kullanıcı ID'si
+        const applicant_id = req.user.id; // Token'dan gelen kullanıcı ID'si (JWT payload'dan)
 
         // Validasyon
         if (!project_id) {
@@ -859,7 +886,7 @@ app.post('/matches', authenticateToken, async (req, res) => {
 // (Hem yaptığı başvurular hem de projelerine gelen başvurular)
 app.get('/matches/user', authenticateToken, async (req, res) => {
     try {
-        const user_id = req.user.kullanici_id; // Token'dan gelen kullanıcı ID'si
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si (JWT payload'dan)
 
         // In-memory kullanılıyorsa
         if (useInMemoryDB || !db) {
@@ -951,7 +978,7 @@ app.put('/matches/:id/status', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params; // match_id
         const { status } = req.body;
-        const user_id = req.user.kullanici_id; // Token'dan gelen kullanıcı ID'si
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si (JWT payload'dan)
 
         // Validasyon
         if (!status || !['Pending', 'Accepted', 'Rejected'].includes(status)) {
@@ -1050,7 +1077,7 @@ app.put('/matches/:id/status', authenticateToken, async (req, res) => {
 app.delete('/matches/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params; // match_id
-        const user_id = req.user.kullanici_id; // Token'dan gelen kullanıcı ID'si
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si (JWT payload'dan)
 
         // In-memory kullanılıyorsa
         if (useInMemoryDB || !db) {
