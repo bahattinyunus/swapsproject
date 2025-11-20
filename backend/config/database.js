@@ -85,6 +85,36 @@ async function createSchema() {
             CREATE INDEX IF NOT EXISTS idx_category ON Yetenekler(category)
         `);
         
+        // User_Skill tablosu (Kullanıcı - Beceri İlişkisi)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS User_Skill (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                skill_id INTEGER NOT NULL,
+                type VARCHAR(20) NOT NULL CHECK (type IN ('Offering', 'Seeking')),
+                olusturulma_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_user_skill_user
+                    FOREIGN KEY(user_id) 
+                    REFERENCES Kullanicilar(id)
+                    ON DELETE CASCADE,
+                CONSTRAINT fk_user_skill_skill
+                    FOREIGN KEY(skill_id) 
+                    REFERENCES Yetenekler(id)
+                    ON DELETE CASCADE,
+                CONSTRAINT unique_user_skill_type UNIQUE (user_id, skill_id, type)
+            )
+        `);
+        
+        await pool.query(`
+            CREATE INDEX IF NOT EXISTS idx_user_skill_user ON User_Skill(user_id)
+        `);
+        await pool.query(`
+            CREATE INDEX IF NOT EXISTS idx_user_skill_skill ON User_Skill(skill_id)
+        `);
+        await pool.query(`
+            CREATE INDEX IF NOT EXISTS idx_user_skill_type ON User_Skill(type)
+        `);
+        
         // Varsayılan yetenekleri ekle (eğer yoksa)
         const result = await pool.query('SELECT COUNT(*) as count FROM Yetenekler');
         if (parseInt(result.rows[0].count) === 0) {

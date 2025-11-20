@@ -9,6 +9,18 @@ const jwt = require('jsonwebtoken');
 // PostgreSQL veritabanı bağlantısı
 const { initializeDatabase, createSchema, getConnection } = require('./config/database');
 
+// Helper fonksiyon: JWT token oluşturur
+function generateToken(userId, email, rol = 'user') {
+    const payload = {
+        id: userId,
+        email: email,
+        rol: rol
+    };
+    
+    // Token'ı oluştur (24 saat geçerli)
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
+}
+
 // Middleware: Gelen isteğin başlıklarında (headers) geçerli bir JWT (token) olup olmadığını kontrol eder.
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization']; // Token, 'Bearer <Token>' formatında gelir
@@ -26,8 +38,8 @@ function authenticateToken(req, res, next) {
             return res.status(403).json({ message: 'Token gecerli degil veya suresi dolmus.' });
         }
         
-        // Token geçerliyse, kullanıcı bilgilerini (kullanici_id, email, rol) isteğe ekle.
-        req.user = user;
+        // Token geçerliyse, kullanıcı bilgilerini (id, email, rol) isteğe ekle.
+        req.user = user; // user içinde: { id, email, rol }
         next(); // Bir sonraki fonksiyona/endpoint'e geçiş yap.
     });
 }
@@ -70,6 +82,14 @@ let inMemorySkills = [
     { id: 20, name: 'UI/UX Design', category: 'Tasarım' },
 ];
 let skillIdCounter = 21;
+
+// In-memory matches (PostgreSQL bağlanamazsa kullanılacak)
+let inMemoryMatches = [];
+let matchIdCounter = 1;
+
+// In-memory projects (PostgreSQL bağlanamazsa kullanılacak)
+let inMemoryProjects = [];
+let projectIdCounter = 1;
 
 // PostgreSQL bağlantısını başlat
 async function startDatabase() {
@@ -167,6 +187,9 @@ app.post('/api/auth/register', async (req, res) => {
             };
             inMemoryUsers.push(newUser);
 
+            // Gerçek JWT token oluştur
+            const token = generateToken(newUser.id, email, 'user');
+
             return res.status(201).json({ 
                 message: 'Kullanici basariyla olusturuldu! (TEST MODU - In-Memory)',
                 user: {
@@ -174,7 +197,7 @@ app.post('/api/auth/register', async (req, res) => {
                     username: kullanici_adi,
                     email: email
                 },
-                token: 'temp-token-' + newUser.id // Kayıt sonrası otomatik giriş için token
+                token: token
             });
         }
 
@@ -187,6 +210,9 @@ app.post('/api/auth/register', async (req, res) => {
             const result = await db.query(sql, [kullanici_adi, email, hashlenmisSifre]);
             const userId = result.rows[0].id;
             
+            // Gerçek JWT token oluştur
+            const token = generateToken(userId, email, 'user');
+            
             console.log('User created successfully in PostgreSQL');
             res.status(201).json({ 
                 message: 'Kullanici basariyla olusturuldu!',
@@ -195,7 +221,7 @@ app.post('/api/auth/register', async (req, res) => {
                     username: kullanici_adi,
                     email: email
                 },
-                token: 'temp-token-' + userId // Kayıt sonrası otomatik giriş için token
+                token: token
             });
         } catch (dbError) {
             if (dbError.code === '23505') { // PostgreSQL unique constraint violation
@@ -223,15 +249,18 @@ app.post('/api/auth/login', async (req, res) => {
 
         // Admin kontrolü
         if (email === 'admin1@gmail.com' && sifre === 'admin-1') {
+            // Gerçek JWT token oluştur (admin için)
+            const token = generateToken(999999, 'admin1@gmail.com', 'admin');
+            
             return res.status(200).json({
                 message: 'Admin girisi basarili!',
                 user: {
-                    id: 'admin',
+                    id: 999999,
                     username: 'Admin',
                     email: 'admin1@gmail.com',
                     role: 'admin'
                 },
-                token: 'admin-token-special'
+                token: token
             });
         }
 
@@ -250,6 +279,9 @@ app.post('/api/auth/login', async (req, res) => {
                 return res.status(401).json({ message: 'Email veya sifre hatali.' });
             }
 
+            // Gerçek JWT token oluştur
+            const token = generateToken(kullanici.id, kullanici.email, 'user');
+
             return res.status(200).json({
                 message: 'Giris basarili! (TEST MODU - In-Memory)',
                 user: {
@@ -258,7 +290,7 @@ app.post('/api/auth/login', async (req, res) => {
                     email: kullanici.email,
                     role: 'user'
                 },
-                token: 'temp-token-' + kullanici.id
+                token: token
             });
         }
 
@@ -279,16 +311,19 @@ app.post('/api/auth/login', async (req, res) => {
                 return res.status(401).json({ message: 'Email veya sifre hatali.' });
             }
 
-            // Başarılı giriş - token olmadan basit response (ileride JWT eklenebilir)
+            // Gerçek JWT token oluştur
+            const token = generateToken(kullanici.id, kullanici.email, kullanici.rol || 'user');
+
+            // Başarılı giriş - gerçek JWT token ile
             res.status(200).json({
                 message: 'Giris basarili!',
                 user: {
                     id: kullanici.id,
                     username: kullanici.kullanici_adi,
                     email: kullanici.email,
-                    role: 'user'
+                    role: kullanici.rol || 'user'
                 },
-                token: 'temp-token-' + kullanici.id // Geçici token, ileride JWT ile değiştirilebilir
+                token: token
             });
         } catch (dbError) {
             console.error('Veritabani sorgusu sirasinda hata:', dbError);
@@ -741,7 +776,1287 @@ app.get('/api/categories', async (req, res) => {
     }
 });
 
-// 18. Sunucuyu dinle
+// ============================================
+// PROJECTS API - PROJE YÖNETİMİ
+// ============================================
+
+// 18. PROJE OLUŞTURMA (POST /projects)
+app.post('/projects', authenticateToken, async (req, res) => {
+    try {
+        const { title, description } = req.body;
+        const owner_id = req.user.id; // Token'dan gelen kullanıcı ID'si
+
+        // Validasyon
+        if (!title || !description) {
+            return res.status(400).json({ message: 'Proje basligi ve aciklama gereklidir.' });
+        }
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            console.log('Using in-memory database for projects (PostgreSQL not available)');
+
+            const newProject = {
+                project_id: projectIdCounter++,
+                owner_id: parseInt(owner_id),
+                title: title,
+                description: description,
+                olusturulma_tarihi: new Date()
+            };
+
+            inMemoryProjects.push(newProject);
+
+            return res.status(201).json({
+                success: true,
+                message: 'Proje basariyla olusturuldu! (TEST MODU - In-Memory)',
+                project: newProject
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            const sql = `
+                INSERT INTO Projects (owner_id, title, description) 
+                VALUES ($1, $2, $3) 
+                RETURNING *
+            `;
+
+            const result = await db.query(sql, [owner_id, title, description]);
+
+            res.status(201).json({
+                success: true,
+                message: 'Proje basariyla olusturuldu!',
+                project: result.rows[0]
+            });
+
+        } catch (dbError) {
+            console.error('Proje olusturulamadi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Proje olusturma hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 19. TÜM PROJELERİ LİSTELE (GET /projects)
+app.get('/projects', async (req, res) => {
+    try {
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            console.log('Using in-memory database for projects list (PostgreSQL not available)');
+
+            // Proje sahibi bilgilerini ekle
+            const projectsWithOwners = inMemoryProjects.map(project => {
+                const owner = inMemoryUsers.find(u => u.id === project.owner_id);
+                return {
+                    ...project,
+                    owner_name: owner ? owner.kullanici_adi : 'Bilinmeyen',
+                    owner_email: owner ? owner.email : ''
+                };
+            });
+
+            return res.status(200).json({
+                success: true,
+                projects: projectsWithOwners
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            const sql = `
+                SELECT 
+                    p.project_id, 
+                    p.owner_id, 
+                    p.title, 
+                    p.description, 
+                    p.olusturulma_tarihi,
+                    k.kullanici_adi as owner_name,
+                    k.email as owner_email
+                FROM Projects p
+                JOIN Kullanicilar k ON p.owner_id = k.id
+                ORDER BY p.olusturulma_tarihi DESC
+            `;
+
+            const result = await db.query(sql);
+
+            res.status(200).json({
+                success: true,
+                projects: result.rows
+            });
+
+        } catch (dbError) {
+            console.error('Projeler listelenemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Proje listesi hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 20. TEK PROJE DETAYI (GET /projects/:id)
+app.get('/projects/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            console.log('Using in-memory database for project detail (PostgreSQL not available)');
+
+            const project = inMemoryProjects.find(p => p.project_id == id);
+            if (!project) {
+                return res.status(404).json({ message: 'Proje bulunamadi.' });
+            }
+
+            const owner = inMemoryUsers.find(u => u.id === project.owner_id);
+
+            return res.status(200).json({
+                success: true,
+                project: {
+                    ...project,
+                    owner_name: owner ? owner.kullanici_adi : 'Bilinmeyen',
+                    owner_email: owner ? owner.email : ''
+                }
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            const sql = `
+                SELECT 
+                    p.project_id, 
+                    p.owner_id, 
+                    p.title, 
+                    p.description, 
+                    p.olusturulma_tarihi,
+                    k.kullanici_adi as owner_name,
+                    k.email as owner_email
+                FROM Projects p
+                JOIN Kullanicilar k ON p.owner_id = k.id
+                WHERE p.project_id = $1
+            `;
+
+            const result = await db.query(sql, [id]);
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ message: 'Proje bulunamadi.' });
+            }
+
+            res.status(200).json({
+                success: true,
+                project: result.rows[0]
+            });
+
+        } catch (dbError) {
+            console.error('Proje detayi getirilemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Proje detay hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 21. KULLANICININ KENDİ PROJELERİ (GET /projects/my)
+app.get('/projects/my', authenticateToken, async (req, res) => {
+    try {
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            console.log('Using in-memory database for my projects (PostgreSQL not available)');
+
+            const myProjects = inMemoryProjects.filter(p => p.owner_id == user_id);
+
+            return res.status(200).json({
+                success: true,
+                projects: myProjects
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            const sql = `
+                SELECT * FROM Projects 
+                WHERE owner_id = $1 
+                ORDER BY olusturulma_tarihi DESC
+            `;
+
+            const result = await db.query(sql, [user_id]);
+
+            res.status(200).json({
+                success: true,
+                projects: result.rows
+            });
+
+        } catch (dbError) {
+            console.error('Kullanici projeleri listelenemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Projelerim listesi hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 22. PROJE GÜNCELLE (PUT /projects/:id)
+// Sadece proje sahibi güncelleyebilir
+app.put('/projects/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, description } = req.body;
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si
+
+        // Validasyon
+        if (!title || !description) {
+            return res.status(400).json({ message: 'Proje basligi ve aciklama gereklidir.' });
+        }
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            console.log('Using in-memory database for project update (PostgreSQL not available)');
+
+            const project = inMemoryProjects.find(p => p.project_id == id);
+            if (!project) {
+                return res.status(404).json({ message: 'Proje bulunamadi.' });
+            }
+
+            // Sadece proje sahibi güncelleyebilir
+            if (project.owner_id != user_id) {
+                return res.status(403).json({ 
+                    message: 'Bu projeyi guncelleme yetkiniz yok.' 
+                });
+            }
+
+            project.title = title;
+            project.description = description;
+
+            return res.status(200).json({
+                success: true,
+                message: 'Proje guncellendi! (TEST MODU - In-Memory)',
+                project: project
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            // Önce proje sahibini kontrol et
+            const checkQuery = 'SELECT owner_id FROM Projects WHERE project_id = $1';
+            const checkResult = await db.query(checkQuery, [id]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: 'Proje bulunamadi.' });
+            }
+
+            // Sadece proje sahibi güncelleyebilir
+            if (checkResult.rows[0].owner_id != user_id) {
+                return res.status(403).json({ 
+                    message: 'Bu projeyi guncelleme yetkiniz yok.' 
+                });
+            }
+
+            // Projeyi güncelle
+            const updateQuery = `
+                UPDATE Projects 
+                SET title = $1, description = $2 
+                WHERE project_id = $3 
+                RETURNING *
+            `;
+
+            const updateResult = await db.query(updateQuery, [title, description, id]);
+
+            res.status(200).json({
+                success: true,
+                message: 'Proje guncellendi!',
+                project: updateResult.rows[0]
+            });
+
+        } catch (dbError) {
+            console.error('Proje guncellenemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Proje guncelleme hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 23. PROJE SİL (DELETE /projects/:id)
+// Sadece proje sahibi silebilir
+app.delete('/projects/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            console.log('Using in-memory database for project delete (PostgreSQL not available)');
+
+            const projectIndex = inMemoryProjects.findIndex(p => p.project_id == id);
+            if (projectIndex === -1) {
+                return res.status(404).json({ message: 'Proje bulunamadi.' });
+            }
+
+            const project = inMemoryProjects[projectIndex];
+
+            // Sadece proje sahibi silebilir
+            if (project.owner_id != user_id) {
+                return res.status(403).json({ 
+                    message: 'Bu projeyi silme yetkiniz yok.' 
+                });
+            }
+
+            // Projeyi sil
+            inMemoryProjects.splice(projectIndex, 1);
+
+            // İlgili match'leri de sil
+            inMemoryMatches = inMemoryMatches.filter(m => m.project_id != id);
+
+            return res.status(200).json({
+                success: true,
+                message: 'Proje silindi! (TEST MODU - In-Memory)'
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            // Önce proje sahibini kontrol et
+            const checkQuery = 'SELECT owner_id FROM Projects WHERE project_id = $1';
+            const checkResult = await db.query(checkQuery, [id]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: 'Proje bulunamadi.' });
+            }
+
+            // Sadece proje sahibi silebilir
+            if (checkResult.rows[0].owner_id != user_id) {
+                return res.status(403).json({ 
+                    message: 'Bu projeyi silme yetkiniz yok.' 
+                });
+            }
+
+            // Projeyi sil (CASCADE ile match'ler otomatik silinir)
+            const deleteQuery = 'DELETE FROM Projects WHERE project_id = $1';
+            await db.query(deleteQuery, [id]);
+
+            res.status(200).json({
+                success: true,
+                message: 'Proje silindi!'
+            });
+
+        } catch (dbError) {
+            console.error('Proje silinemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Proje silme hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// ============================================
+// MATCHES API - BAŞVURU YÖNETİMİ
+// ============================================
+
+// 24. BAŞVURU OLUŞTURMA (POST /matches)
+// Token'dan gelen kullanıcı, belirtilen projeye başvurur
+app.post('/matches', authenticateToken, async (req, res) => {
+    try {
+        const { project_id } = req.body;
+        const applicant_id = req.user.id; // Token'dan gelen kullanıcı ID'si (JWT payload'dan)
+
+        // Validasyon
+        if (!project_id) {
+            return res.status(400).json({ message: 'Proje ID gereklidir.' });
+        }
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            console.log('Using in-memory database for matches (PostgreSQL not available)');
+
+            // Projenin varlığını kontrol et
+            const project = inMemoryProjects.find(p => p.project_id == project_id);
+            if (!project) {
+                return res.status(404).json({ message: 'Proje bulunamadi.' });
+            }
+
+            // Kendi projesine başvuramaz
+            if (project.owner_id == applicant_id) {
+                return res.status(400).json({ message: 'Kendi projenize basvuramazsiniz.' });
+            }
+
+            // Aynı projeye daha önce başvuru yapmış mı kontrol et
+            const existingMatch = inMemoryMatches.find(
+                m => m.applicant_id == applicant_id && m.project_id == project_id
+            );
+
+            if (existingMatch) {
+                return res.status(400).json({ message: 'Bu projeye zaten basvuru yaptiniz.' });
+            }
+
+            // Yeni başvuru oluştur
+            const newMatch = {
+                match_id: matchIdCounter++,
+                applicant_id: parseInt(applicant_id),
+                project_id: parseInt(project_id),
+                status: 'Pending',
+                olusturulma_tarihi: new Date()
+            };
+
+            inMemoryMatches.push(newMatch);
+
+            return res.status(201).json({
+                success: true,
+                message: 'Basvurunuz basariyla olusturuldu! (TEST MODU - In-Memory)',
+                match: newMatch
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            // Projenin varlığını ve sahibini kontrol et
+            const projectCheck = await db.query(
+                'SELECT owner_id FROM Projects WHERE project_id = $1',
+                [project_id]
+            );
+
+            if (projectCheck.rows.length === 0) {
+                return res.status(404).json({ message: 'Proje bulunamadi.' });
+            }
+
+            // Kendi projesine başvuramaz
+            if (projectCheck.rows[0].owner_id == applicant_id) {
+                return res.status(400).json({ message: 'Kendi projenize basvuramazsiniz.' });
+            }
+
+            // Başvuru oluştur
+            const sql = `
+                INSERT INTO Matches (applicant_id, project_id, status) 
+                VALUES ($1, $2, 'Pending') 
+                RETURNING *
+            `;
+
+            const result = await db.query(sql, [applicant_id, project_id]);
+
+            res.status(201).json({
+                success: true,
+                message: 'Basvurunuz basariyla olusturuldu!',
+                match: result.rows[0]
+            });
+
+        } catch (dbError) {
+            // UNIQUE constraint violation
+            if (dbError.code === '23505') {
+                return res.status(400).json({ message: 'Bu projeye zaten basvuru yaptiniz.' });
+            }
+            console.error('Basvuru olusturulamadi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Basvuru olusturma hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 25. KULLANICI BAŞVURULARINI LİSTELE (GET /matches/user)
+// Token'dan gelen kullanıcının tüm başvurularını getirir
+// (Hem yaptığı başvurular hem de projelerine gelen başvurular)
+app.get('/matches/user', authenticateToken, async (req, res) => {
+    try {
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si (JWT payload'dan)
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            console.log('Using in-memory database for matches list (PostgreSQL not available)');
+
+            // Kullanıcının sahip olduğu projeler
+            const userProjects = inMemoryProjects.filter(p => p.owner_id == user_id);
+            const userProjectIds = userProjects.map(p => p.project_id);
+
+            // Kullanıcının yaptığı başvurular
+            const applicantMatches = inMemoryMatches.filter(m => m.applicant_id == user_id);
+
+            // Kullanıcının projelerine gelen başvurular
+            const receivedMatches = inMemoryMatches.filter(m => 
+                userProjectIds.includes(m.project_id)
+            );
+
+            return res.status(200).json({
+                success: true,
+                applicantMatches: applicantMatches,
+                receivedMatches: receivedMatches
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            // Kullanıcının yaptığı başvurular
+            const applicantMatchesQuery = `
+                SELECT 
+                    m.match_id, 
+                    m.applicant_id, 
+                    m.project_id, 
+                    m.status, 
+                    m.olusturulma_tarihi,
+                    p.title as project_title,
+                    p.description as project_description,
+                    p.owner_id as project_owner_id,
+                    k.kullanici_adi as project_owner_name
+                FROM Matches m
+                JOIN Projects p ON m.project_id = p.project_id
+                JOIN Kullanicilar k ON p.owner_id = k.id
+                WHERE m.applicant_id = $1
+                ORDER BY m.olusturulma_tarihi DESC
+            `;
+
+            const applicantMatchesResult = await db.query(applicantMatchesQuery, [user_id]);
+
+            // Kullanıcının projelerine gelen başvurular
+            const receivedMatchesQuery = `
+                SELECT 
+                    m.match_id, 
+                    m.applicant_id, 
+                    m.project_id, 
+                    m.status, 
+                    m.olusturulma_tarihi,
+                    p.title as project_title,
+                    p.description as project_description,
+                    k.kullanici_adi as applicant_name,
+                    k.email as applicant_email
+                FROM Matches m
+                JOIN Projects p ON m.project_id = p.project_id
+                JOIN Kullanicilar k ON m.applicant_id = k.id
+                WHERE p.owner_id = $1
+                ORDER BY m.olusturulma_tarihi DESC
+            `;
+
+            const receivedMatchesResult = await db.query(receivedMatchesQuery, [user_id]);
+
+            res.status(200).json({
+                success: true,
+                applicantMatches: applicantMatchesResult.rows,
+                receivedMatches: receivedMatchesResult.rows
+            });
+
+        } catch (dbError) {
+            console.error('Basvurular listelenemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Basvuru listesi hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 26. BAŞVURU DURUMU GÜNCELLE (PUT /matches/:id/status)
+// Sadece proje sahibi başvuru durumunu değiştirebilir (Pending -> Accepted/Rejected)
+app.put('/matches/:id/status', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params; // match_id
+        const { status } = req.body;
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si (JWT payload'dan)
+
+        // Validasyon
+        if (!status || !['Pending', 'Accepted', 'Rejected'].includes(status)) {
+            return res.status(400).json({ 
+                message: 'Gecerli bir durum belirtmelisiniz: Pending, Accepted veya Rejected' 
+            });
+        }
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            console.log('Using in-memory database for match status update (PostgreSQL not available)');
+
+            // Match'i bul
+            const match = inMemoryMatches.find(m => m.match_id == id);
+            if (!match) {
+                return res.status(404).json({ message: 'Basvuru bulunamadi.' });
+            }
+
+            // Projeyi bul
+            const project = inMemoryProjects.find(p => p.project_id == match.project_id);
+            if (!project) {
+                return res.status(404).json({ message: 'Proje bulunamadi.' });
+            }
+
+            // Sadece proje sahibi durumu değiştirebilir
+            if (project.owner_id != user_id) {
+                return res.status(403).json({ 
+                    message: 'Bu islemi sadece proje sahibi yapabilir.' 
+                });
+            }
+
+            // Durumu güncelle
+            match.status = status;
+
+            return res.status(200).json({
+                success: true,
+                message: 'Basvuru durumu guncellendi! (TEST MODU - In-Memory)',
+                match: match
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            // Önce başvurunun ve projenin sahibinin kontrolünü yap
+            const checkQuery = `
+                SELECT m.match_id, m.status, p.owner_id 
+                FROM Matches m
+                JOIN Projects p ON m.project_id = p.project_id
+                WHERE m.match_id = $1
+            `;
+
+            const checkResult = await db.query(checkQuery, [id]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: 'Basvuru bulunamadi.' });
+            }
+
+            const matchData = checkResult.rows[0];
+
+            // Sadece proje sahibi durumu değiştirebilir
+            if (matchData.owner_id != user_id) {
+                return res.status(403).json({ 
+                    message: 'Bu islemi sadece proje sahibi yapabilir.' 
+                });
+            }
+
+            // Durumu güncelle
+            const updateQuery = `
+                UPDATE Matches 
+                SET status = $1 
+                WHERE match_id = $2 
+                RETURNING *
+            `;
+
+            const updateResult = await db.query(updateQuery, [status, id]);
+
+            res.status(200).json({
+                success: true,
+                message: 'Basvuru durumu guncellendi!',
+                match: updateResult.rows[0]
+            });
+
+        } catch (dbError) {
+            console.error('Basvuru durumu guncellenemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Durum guncelleme hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 27. BAŞVURU SİL (DELETE /matches/:id)
+// Sadece proje sahibi veya başvuruyu yapan kullanıcı silebilir
+app.delete('/matches/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params; // match_id
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si (JWT payload'dan)
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            console.log('Using in-memory database for match delete (PostgreSQL not available)');
+
+            // Match'i bul
+            const matchIndex = inMemoryMatches.findIndex(m => m.match_id == id);
+            if (matchIndex === -1) {
+                return res.status(404).json({ message: 'Basvuru bulunamadi.' });
+            }
+
+            const match = inMemoryMatches[matchIndex];
+
+            // Projeyi bul
+            const project = inMemoryProjects.find(p => p.project_id == match.project_id);
+            if (!project) {
+                return res.status(404).json({ message: 'Proje bulunamadi.' });
+            }
+
+            // Sadece proje sahibi veya başvuruyu yapan silebilir
+            if (match.applicant_id != user_id && project.owner_id != user_id) {
+                return res.status(403).json({ 
+                    message: 'Bu basvuruyu silme yetkiniz yok.' 
+                });
+            }
+
+            // Match'i sil
+            inMemoryMatches.splice(matchIndex, 1);
+
+            return res.status(200).json({
+                success: true,
+                message: 'Basvuru silindi! (TEST MODU - In-Memory)'
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            // Önce başvurunun bilgilerini kontrol et
+            const checkQuery = `
+                SELECT m.match_id, m.applicant_id, p.owner_id 
+                FROM Matches m
+                JOIN Projects p ON m.project_id = p.project_id
+                WHERE m.match_id = $1
+            `;
+
+            const checkResult = await db.query(checkQuery, [id]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: 'Basvuru bulunamadi.' });
+            }
+
+            const matchData = checkResult.rows[0];
+
+            // Sadece proje sahibi veya başvuruyu yapan silebilir
+            if (matchData.applicant_id != user_id && matchData.owner_id != user_id) {
+                return res.status(403).json({ 
+                    message: 'Bu basvuruyu silme yetkiniz yok.' 
+                });
+            }
+
+            // Match'i sil
+            const deleteQuery = 'DELETE FROM Matches WHERE match_id = $1';
+            await db.query(deleteQuery, [id]);
+
+            res.status(200).json({
+                success: true,
+                message: 'Basvuru silindi!'
+            });
+
+        } catch (dbError) {
+            console.error('Basvuru silinemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Basvuru silme hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// ============================================
+// USER SKILLS API - KULLANICI BECERİ YÖNETİMİ
+// ============================================
+
+// 28. KULLANICININ BECERİLERİNİ GETIR (GET /user-skills/:userId)
+app.get('/user-skills/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ message: 'Kullanici ID gereklidir.' });
+        }
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            // In-memory için basit bir yapı kullanabiliriz (ileride eklenebilir)
+            return res.status(200).json({
+                success: true,
+                message: 'In-memory modda User_Skill desteklenmiyor',
+                offering: [],
+                seeking: []
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            const sql = `
+                SELECT 
+                    us.id,
+                    us.user_id,
+                    us.skill_id,
+                    us.type,
+                    us.olusturulma_tarihi,
+                    y.name as skill_name,
+                    y.category as skill_category
+                FROM User_Skill us
+                JOIN Yetenekler y ON us.skill_id = y.id
+                WHERE us.user_id = $1
+                ORDER BY us.type, y.category, y.name
+            `;
+
+            const results = await db.query(sql, [userId]);
+
+            // Offering ve Seeking olarak ayır
+            const offering = results.rows.filter(row => row.type === 'Offering');
+            const seeking = results.rows.filter(row => row.type === 'Seeking');
+
+            res.status(200).json({
+                success: true,
+                offering: offering,
+                seeking: seeking
+            });
+
+        } catch (dbError) {
+            console.error('Kullanici becerileri getirilemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('User skills getirme hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 29. KULLANICIYA BECERİ EKLE (POST /user-skills)
+app.post('/user-skills', authenticateToken, async (req, res) => {
+    try {
+        const { skill_id, type } = req.body;
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si
+
+        // Validasyon
+        if (!skill_id || !type) {
+            return res.status(400).json({ message: 'skill_id ve type gereklidir.' });
+        }
+
+        if (!['Offering', 'Seeking'].includes(type)) {
+            return res.status(400).json({ message: 'type sadece "Offering" veya "Seeking" olabilir.' });
+        }
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            return res.status(501).json({
+                success: false,
+                message: 'In-memory modda User_Skill desteklenmiyor. PostgreSQL gerekli.'
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            const sql = `
+                INSERT INTO User_Skill (user_id, skill_id, type) 
+                VALUES ($1, $2, $3) 
+                RETURNING *
+            `;
+
+            const result = await db.query(sql, [user_id, skill_id, type]);
+
+            res.status(201).json({
+                success: true,
+                message: 'Beceri basariyla eklendi!',
+                user_skill: result.rows[0]
+            });
+
+        } catch (dbError) {
+            // UNIQUE constraint violation
+            if (dbError.code === '23505') {
+                return res.status(400).json({ message: 'Bu beceri zaten ekli.' });
+            }
+            // Foreign key violation
+            if (dbError.code === '23503') {
+                return res.status(400).json({ message: 'Gecersiz skill_id veya user_id.' });
+            }
+            console.error('Beceri eklenemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('User skill ekleme hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 30. KULLANICIDAN BECERİ SİL (DELETE /user-skills/:id)
+app.delete('/user-skills/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params; // user_skill id
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            return res.status(501).json({
+                success: false,
+                message: 'In-memory modda User_Skill desteklenmiyor. PostgreSQL gerekli.'
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            // Önce bu becerinin bu kullanıcıya ait olup olmadığını kontrol et
+            const checkQuery = 'SELECT user_id FROM User_Skill WHERE id = $1';
+            const checkResult = await db.query(checkQuery, [id]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: 'Beceri bulunamadi.' });
+            }
+
+            // Sadece kendi becerisini silebilir
+            if (checkResult.rows[0].user_id != user_id) {
+                return res.status(403).json({ 
+                    message: 'Bu beceriyi silme yetkiniz yok.' 
+                });
+            }
+
+            // Beceriyi sil
+            const deleteQuery = 'DELETE FROM User_Skill WHERE id = $1';
+            await db.query(deleteQuery, [id]);
+
+            res.status(200).json({
+                success: true,
+                message: 'Beceri silindi!'
+            });
+
+        } catch (dbError) {
+            console.error('Beceri silinemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('User skill silme hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// ============================================
+// SWAPS API - KARŞILIKLI EŞLEŞME (RECIPROCAL MATCHING)
+// ============================================
+
+// 31. KARŞILIKLI EŞLEŞME - RECIPROCAL MATCHING (GET /swaps/reciprocal)
+// Token'dan gelen kullanıcı için, iki yönlü beceri eşleşmesi olan kullanıcıları listeler
+// Mantık:
+// - Kullanıcı A'nın Seeking becerileri = Kullanıcı B'nin Offering becerileri
+// - Kullanıcı B'nin Seeking becerileri = Kullanıcı A'nın Offering becerileri
+app.get('/swaps/reciprocal', authenticateToken, async (req, res) => {
+    try {
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si (Kullanıcı A)
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            return res.status(501).json({
+                success: false,
+                message: 'Reciprocal matching sadece PostgreSQL ile destekleniyor.',
+                matches: []
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            // Karmaşık SQL sorgusu: İki yönlü eşleşme
+            const sql = `
+                SELECT DISTINCT
+                    u.id,
+                    u.kullanici_adi,
+                    u.email,
+                    u.olusturulma_tarihi,
+                    -- A'nın Seeking becerileri ve B'nin karşılayan Offering becerileri
+                    (
+                        SELECT json_agg(
+                            json_build_object(
+                                'skill_id', y.id,
+                                'skill_name', y.name,
+                                'skill_category', y.category
+                            )
+                        )
+                        FROM User_Skill us_a_seeking
+                        INNER JOIN User_Skill us_b_offering 
+                            ON us_a_seeking.skill_id = us_b_offering.skill_id
+                        INNER JOIN Yetenekler y 
+                            ON us_a_seeking.skill_id = y.id
+                        WHERE us_a_seeking.user_id = $1
+                        AND us_a_seeking.type = 'Seeking'
+                        AND us_b_offering.user_id = u.id
+                        AND us_b_offering.type = 'Offering'
+                    ) as matched_skills_a_needs,
+                    -- B'nin Seeking becerileri ve A'nın karşılayan Offering becerileri
+                    (
+                        SELECT json_agg(
+                            json_build_object(
+                                'skill_id', y.id,
+                                'skill_name', y.name,
+                                'skill_category', y.category
+                            )
+                        )
+                        FROM User_Skill us_b_seeking
+                        INNER JOIN User_Skill us_a_offering 
+                            ON us_b_seeking.skill_id = us_a_offering.skill_id
+                        INNER JOIN Yetenekler y 
+                            ON us_b_seeking.skill_id = y.id
+                        WHERE us_b_seeking.user_id = u.id
+                        AND us_b_seeking.type = 'Seeking'
+                        AND us_a_offering.user_id = $1
+                        AND us_a_offering.type = 'Offering'
+                    ) as matched_skills_b_needs
+                FROM Kullanicilar u
+                WHERE u.id != $1  -- Kendini eşleştirme
+                AND EXISTS (
+                    -- Koşul 1: A'nın Seeking becerileri, B'nin Offering becerileri ile eşleşiyor
+                    SELECT 1
+                    FROM User_Skill us_a_seeking
+                    INNER JOIN User_Skill us_b_offering 
+                        ON us_a_seeking.skill_id = us_b_offering.skill_id
+                    WHERE us_a_seeking.user_id = $1
+                    AND us_a_seeking.type = 'Seeking'
+                    AND us_b_offering.user_id = u.id
+                    AND us_b_offering.type = 'Offering'
+                )
+                AND EXISTS (
+                    -- Koşul 2: B'nin Seeking becerileri, A'nın Offering becerileri ile eşleşiyor
+                    SELECT 1
+                    FROM User_Skill us_b_seeking
+                    INNER JOIN User_Skill us_a_offering 
+                        ON us_b_seeking.skill_id = us_a_offering.skill_id
+                    WHERE us_b_seeking.user_id = u.id
+                    AND us_b_seeking.type = 'Seeking'
+                    AND us_a_offering.user_id = $1
+                    AND us_a_offering.type = 'Offering'
+                )
+                ORDER BY u.kullanici_adi
+            `;
+
+            const results = await db.query(sql, [user_id]);
+
+            res.status(200).json({
+                success: true,
+                message: 'Karsilikli eslesmeler basariyla getirildi!',
+                user_id: user_id,
+                matches_count: results.rows.length,
+                matches: results.rows
+            });
+
+        } catch (dbError) {
+            console.error('Reciprocal matching hatasi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Swaps reciprocal hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// ============================================
+// DASHBOARD TASKS API - GÖREV YÖNETİMİ
+// ============================================
+
+// 32. KULLANICI GÖREVLERİNİ LİSTELE (GET /user/tasks)
+// Filter parametreleri: ongoing, offers, suggestions
+app.get('/user/tasks', authenticateToken, async (req, res) => {
+    try {
+        const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si
+        const { filter } = req.query; // Query parameter: ?filter=ongoing
+
+        // In-memory kullanılıyorsa
+        if (useInMemoryDB || !db) {
+            console.log('Using in-memory database for user tasks (PostgreSQL not available)');
+
+            // 1. DEVAM EDEN İŞLER (ongoing)
+            if (filter === 'ongoing') {
+                // Kullanıcının owner olduğu projeler
+                const ownedProjects = inMemoryProjects.filter(p => p.owner_id == user_id);
+
+                // Kullanıcının başvurusu Accepted olan projeler
+                const acceptedMatches = inMemoryMatches.filter(
+                    m => m.applicant_id == user_id && m.status === 'Accepted'
+                );
+                const acceptedProjectIds = acceptedMatches.map(m => m.project_id);
+                const acceptedProjects = inMemoryProjects.filter(
+                    p => acceptedProjectIds.includes(p.project_id)
+                );
+
+                return res.status(200).json({
+                    success: true,
+                    filter: 'ongoing',
+                    ownedProjects: ownedProjects,
+                    acceptedProjects: acceptedProjects,
+                    totalCount: ownedProjects.length + acceptedProjects.length
+                });
+            }
+
+            // 2. BEKLEYEN TEKLİFLER (offers)
+            if (filter === 'offers') {
+                // Kullanıcının sahip olduğu projeler
+                const userProjects = inMemoryProjects.filter(p => p.owner_id == user_id);
+                const userProjectIds = userProjects.map(p => p.project_id);
+
+                // Bu projelere gelen Pending başvurular
+                const pendingOffers = inMemoryMatches.filter(
+                    m => userProjectIds.includes(m.project_id) && m.status === 'Pending'
+                );
+
+                // Başvuru sahiplerinin bilgilerini ekle
+                const offersWithApplicants = pendingOffers.map(match => {
+                    const applicant = inMemoryUsers.find(u => u.id === match.applicant_id);
+                    const project = inMemoryProjects.find(p => p.project_id === match.project_id);
+                    return {
+                        ...match,
+                        applicant_name: applicant ? applicant.kullanici_adi : 'Bilinmeyen',
+                        applicant_email: applicant ? applicant.email : '',
+                        project_title: project ? project.title : '',
+                        project_description: project ? project.description : ''
+                    };
+                });
+
+                return res.status(200).json({
+                    success: true,
+                    filter: 'offers',
+                    offers: offersWithApplicants,
+                    totalCount: offersWithApplicants.length
+                });
+            }
+
+            // 3. ÖNERİLER (suggestions)
+            // Not: Skill bazlı filtreleme için profile verisi gerekli
+            if (filter === 'suggestions') {
+                // Kullanıcının başvurmadığı ve sahibi olmadığı projeler
+                const userMatches = inMemoryMatches.filter(m => m.applicant_id == user_id);
+                const appliedProjectIds = userMatches.map(m => m.project_id);
+
+                const suggestions = inMemoryProjects.filter(
+                    p => p.owner_id != user_id && !appliedProjectIds.includes(p.project_id)
+                );
+
+                return res.status(200).json({
+                    success: true,
+                    filter: 'suggestions',
+                    suggestions: suggestions,
+                    totalCount: suggestions.length
+                });
+            }
+
+            // Filter belirtilmemişse tümünü döndür
+            return res.status(400).json({ 
+                message: 'Lutfen bir filter belirtin: ongoing, offers veya suggestions' 
+            });
+        }
+
+        // PostgreSQL kullanılıyorsa
+        try {
+            // 1. DEVAM EDEN İŞLER (ongoing)
+            if (filter === 'ongoing') {
+                // Kullanıcının owner olduğu projeler
+                const ownedProjectsQuery = `
+                    SELECT 
+                        p.project_id, 
+                        p.owner_id, 
+                        p.title, 
+                        p.description, 
+                        p.olusturulma_tarihi,
+                        'owned' as project_type
+                    FROM Projects p
+                    WHERE p.owner_id = $1
+                    ORDER BY p.olusturulma_tarihi DESC
+                `;
+
+                const ownedProjects = await db.query(ownedProjectsQuery, [user_id]);
+
+                // Kullanıcının başvurusu Accepted olan projeler
+                const acceptedProjectsQuery = `
+                    SELECT 
+                        p.project_id, 
+                        p.owner_id, 
+                        p.title, 
+                        p.description, 
+                        p.olusturulma_tarihi,
+                        m.match_id,
+                        m.status,
+                        'accepted' as project_type,
+                        k.kullanici_adi as owner_name
+                    FROM Matches m
+                    JOIN Projects p ON m.project_id = p.project_id
+                    JOIN Kullanicilar k ON p.owner_id = k.id
+                    WHERE m.applicant_id = $1 AND m.status = 'Accepted'
+                    ORDER BY m.olusturulma_tarihi DESC
+                `;
+
+                const acceptedProjects = await db.query(acceptedProjectsQuery, [user_id]);
+
+                return res.status(200).json({
+                    success: true,
+                    filter: 'ongoing',
+                    ownedProjects: ownedProjects.rows,
+                    acceptedProjects: acceptedProjects.rows,
+                    totalCount: ownedProjects.rows.length + acceptedProjects.rows.length
+                });
+            }
+
+            // 2. BEKLEYEN TEKLİFLER (offers)
+            if (filter === 'offers') {
+                const offersQuery = `
+                    SELECT 
+                        m.match_id, 
+                        m.applicant_id, 
+                        m.project_id, 
+                        m.status, 
+                        m.olusturulma_tarihi,
+                        p.title as project_title,
+                        p.description as project_description,
+                        k.kullanici_adi as applicant_name,
+                        k.email as applicant_email
+                    FROM Matches m
+                    JOIN Projects p ON m.project_id = p.project_id
+                    JOIN Kullanicilar k ON m.applicant_id = k.id
+                    WHERE p.owner_id = $1 AND m.status = 'Pending'
+                    ORDER BY m.olusturulma_tarihi DESC
+                `;
+
+                const offers = await db.query(offersQuery, [user_id]);
+
+                return res.status(200).json({
+                    success: true,
+                    filter: 'offers',
+                    offers: offers.rows,
+                    totalCount: offers.rows.length
+                });
+            }
+
+            // 3. ÖNERİLER (suggestions)
+            if (filter === 'suggestions') {
+                // Kullanıcının başvurmadığı ve sahibi olmadığı projeler
+                const suggestionsQuery = `
+                    SELECT 
+                        p.project_id, 
+                        p.owner_id, 
+                        p.title, 
+                        p.description, 
+                        p.olusturulma_tarihi,
+                        k.kullanici_adi as owner_name,
+                        k.email as owner_email
+                    FROM Projects p
+                    JOIN Kullanicilar k ON p.owner_id = k.id
+                    WHERE p.owner_id != $1
+                    AND p.project_id NOT IN (
+                        SELECT project_id 
+                        FROM Matches 
+                        WHERE applicant_id = $1
+                    )
+                    ORDER BY p.olusturulma_tarihi DESC
+                `;
+
+                const suggestions = await db.query(suggestionsQuery, [user_id]);
+
+                return res.status(200).json({
+                    success: true,
+                    filter: 'suggestions',
+                    suggestions: suggestions.rows,
+                    totalCount: suggestions.rows.length
+                });
+            }
+
+            // Filter belirtilmemişse hata döndür
+            return res.status(400).json({ 
+                message: 'Lutfen bir filter belirtin: ongoing, offers veya suggestions' 
+            });
+
+        } catch (dbError) {
+            console.error('Kullanici gorevleri listelenemedi:', dbError);
+            return res.status(500).json({ message: 'Sunucu hatasi: ' + dbError.message });
+        }
+
+    } catch (error) {
+        console.error('Gorev listesi hatasi:', error);
+        res.status(500).json({ message: 'Sunucu hatasi: ' + error.message });
+    }
+});
+
+// 33. Sunucuyu dinle
 app.listen(PORT, () => {
     console.log(`Sunucu http://localhost:${PORT} adresinde basariyla baslatildi.`);
 });

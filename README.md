@@ -23,10 +23,15 @@ SwapS: Proje tabanlı beceri takas platformu. Kullanıcılar projelerini ve ihti
 
 ## Özellikler
 
-- Proje oluşturma ve beceri ihtiyaçlarını belirtme
-- Kullanıcı profili ve beceri etiketleri
+- Kullanıcı kaydı ve JWT tabanlı kimlik doğrulama
+- Proje oluşturma ve yönetim sistemi
+- Kullanıcı profili ve beceri etiketleri yönetimi
+- **Kullanıcı beceri sistemi** (Offering/Seeking)
+- **Karşılıklı eşleşme algoritması** (Reciprocal Matching)
+- Başvuru ve teklif yönetimi (Matches)
 - Eşleşme ve iletişim akışı (örn. mesajlaşma/yorumlar)
-- Görev/issue bazlı işbirliği modeli
+- Admin paneli (Kullanıcı ve beceri yönetimi)
+- Dashboard görev yönetimi
 - Değerlendirme/geri bildirim sistemi (ileride)
 
 > Not: Özelliklerin kapsamı ve detayları geliştirme ilerledikçe güncellenecektir.
@@ -37,11 +42,29 @@ Monorepo düzeni ile `backend` ve `frontend` dizinleri:
 
 ```
 .
-├─ backend/   # Sunucu tarafı kodu (API, iş kuralları, veritabanı erişimi)
-└─ frontend/  # İstemci tarafı uygulama (web arayüzü)
+├─ backend/         # Sunucu tarafı kodu (Node.js/Express + PostgreSQL)
+│  ├─ config/       # Veritabanı konfigürasyonu
+│  ├─ controllers/  # İş mantığı kontrolcüleri
+│  ├─ middleware/   # JWT authentication middleware
+│  ├─ routes/       # API route tanımlamaları
+│  ├─ index.js      # Ana sunucu dosyası
+│  └─ sema.sql      # Veritabanı şema tanımları
+└─ frontend/        # İstemci tarafı uygulama (React + Vite)
+   ├─ src/
+   │  ├─ components/ # React bileşenleri
+   │  ├─ services/   # API servisleri
+   │  └─ App.jsx     # Ana uygulama
+   └─ public/        # Statik dosyalar
 ```
 
-> Şu an dizinler yer tutucu durumunda. Yığın (stack) belirlendikçe içerik güncellenecek.
+### Veritabanı Yapısı (PostgreSQL)
+
+- **Kullanicilar** - Kullanıcı hesapları ve kimlik bilgileri
+- **Yetenekler** - Beceri/yetenek katalogu (kategori bazlı)
+- **User_Skill** 🆕 - Kullanıcı-Beceri ilişkisi (Offering/Seeking)
+- **Projects** - Kullanıcı projeleri
+- **Matches** - Proje başvuruları ve eşleşmeler
+- **Messages** - Kullanıcı mesajlaşma sistemi
 
 ## Gereksinimler
 
@@ -80,35 +103,63 @@ cd backend  && npm install && cd ..
 
 ## Çalıştırma
 
-Geliştirme ortamında servisleri başlatın.
+### 1. PostgreSQL Veritabanını Hazırlayın
 
 ```bash
-# Frontend
-cd frontend
-npm run dev
+# PostgreSQL'e bağlanın
+psql -U postgres
 
-# Backend
-cd ../backend
-npm run dev
+# Veritabanını oluşturun
+CREATE DATABASE swaps_db;
+
+# Çıkış yapın
+\q
 ```
 
-> Komutlar yığına göre değişebilir. Aşağıdaki "Proje Komutları" bölümünü özelleştirin.
+> **Not:** Şema otomatik olarak ilk çalıştırmada oluşturulur. Manuel olarak oluşturmak için `backend/sema.sql` dosyasını kullanabilirsiniz.
+
+### 2. Backend'i Başlatın
+
+```bash
+cd backend
+npm install
+node index.js
+# Sunucu http://localhost:3000 adresinde başlatılacak
+```
+
+### 3. Frontend'i Başlatın
+
+```bash
+cd frontend
+npm install
+npm run dev
+# Uygulama http://localhost:5173 adresinde açılacak
+```
 
 ## Ortam Değişkenleri (.env)
 
-Örnek içerik (ihtiyaca göre genişletin):
-
-```
-# Genel
+### Backend (.env)
+```env
 NODE_ENV=development
+PORT=3000
 
-# Backend
-PORT=4000
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/swaps
-JWT_SECRET=please_change_me
+# PostgreSQL Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_NAME=swaps_db
 
-# Frontend
-VITE_API_BASE_URL=http://localhost:4000
+# JWT Secret
+JWT_SECRET=your_super_secret_key_here
+
+# Frontend URL (CORS için)
+FRONTEND_URL=http://localhost:5173
+```
+
+### Frontend (.env)
+```env
+VITE_API_BASE_URL=http://localhost:3000
 ```
 
 ## Proje Komutları
@@ -178,12 +229,68 @@ VITE_API_BASE_URL=<backend-url>
 - Render otomatik olarak main branch'teki her commit'i deploy eder
 - Preview environments için PR branch'leri kullanabilirsiniz
 
+## API Dokümantasyonu
+
+### Kimlik Doğrulama
+- `POST /api/auth/register` - Kullanıcı kaydı
+- `POST /api/auth/login` - Kullanıcı girişi
+
+### Kullanıcı Profili
+- `GET /api/profile/:userId` - Kullanıcı profili getir
+- `POST /api/profile/save-settings` - Profil ayarlarını kaydet
+- `DELETE /api/profile/delete-account/:userId` - Hesap sil
+
+### Yetenekler (Skills)
+- `GET /api/skills` - Tüm yetenekleri listele
+- `POST /api/skills` - Yeni yetenek ekle
+- `PUT /api/skills/:skillId` - Yetenek güncelle
+- `DELETE /api/skills/:skillId` - Yetenek sil
+- `GET /api/categories` - Tüm kategorileri listele
+
+### Kullanıcı Becerileri (User Skills) 🆕
+- `GET /user-skills/:userId` - Kullanıcının becerilerini getir (Offering/Seeking)
+- `POST /user-skills` - Kullanıcıya beceri ekle (Token gerekli)
+- `DELETE /user-skills/:id` - Kullanıcıdan beceri sil (Token gerekli)
+
+### Karşılıklı Eşleşme (Reciprocal Matching) 🆕
+- `GET /swaps/reciprocal` - İki yönlü beceri eşleşmelerini getir (Token gerekli)
+  - Kullanıcı A'nın Seeking becerileri = Kullanıcı B'nin Offering becerileri
+  - Kullanıcı B'nin Seeking becerileri = Kullanıcı A'nın Offering becerileri
+
+### Projeler
+- `GET /projects` - Tüm projeleri listele
+- `GET /projects/:id` - Proje detayı
+- `GET /projects/my` - Kullanıcının projeleri (Token gerekli)
+- `POST /projects` - Yeni proje oluştur (Token gerekli)
+- `PUT /projects/:id` - Proje güncelle (Token gerekli)
+- `DELETE /projects/:id` - Proje sil (Token gerekli)
+
+### Başvurular (Matches)
+- `GET /matches/user` - Kullanıcının başvurularını listele (Token gerekli)
+- `POST /matches` - Projeye başvur (Token gerekli)
+- `PUT /matches/:id/status` - Başvuru durumu güncelle (Token gerekli)
+- `DELETE /matches/:id` - Başvuru sil (Token gerekli)
+
+### Dashboard
+- `GET /user/tasks?filter=ongoing` - Devam eden işler
+- `GET /user/tasks?filter=offers` - Bekleyen teklifler
+- `GET /user/tasks?filter=suggestions` - Önerilen projeler
+
+### Admin
+- `GET /api/admin/users` - Tüm kullanıcıları listele
+- `PUT /api/admin/users/:userId` - Kullanıcı güncelle
+- `DELETE /api/admin/users/:userId` - Kullanıcı sil
+
+> **Not:** 🔒 Token gerekli endpoint'ler için `Authorization: Bearer <TOKEN>` header'ı gereklidir.
+
 ## Yol Haritası
 
-- MVP: Proje ve beceri ilanları, başvuru/katılım, temel profil
-- Eşleşme algoritması ve bildirimler
-- Mesajlaşma/işbirliği araçları
-- Değerlendirme ve rozetler
-- Mobil uyum ve erişilebilirlik iyileştirmeleri
+- ✅ MVP: Proje ve beceri ilanları, başvuru/katılım, temel profil
+- ✅ Kullanıcı beceri sistemi (Offering/Seeking)
+- ✅ Karşılıklı eşleşme algoritması (Reciprocal Matching)
+- ⏳ Mesajlaşma/işbirliği araçları
+- ⏳ Bildirim sistemi
+- ⏳ Değerlendirme ve rozetler
+- ⏳ Mobil uyum ve erişilebilirlik iyileştirmeleri
 
 
