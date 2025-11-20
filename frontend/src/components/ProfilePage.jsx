@@ -25,6 +25,7 @@ import {
 import { Edit, Save, Cancel, Delete, Add, Close, Warning } from '@mui/icons-material';
 import authService from '../services/authService';
 import skillsService from '../services/skillsService';
+import swapsService from '../services/swapsService';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
@@ -526,11 +527,68 @@ const ProfilePage = () => {
       if (result.success) {
         // Başarılı ise localStorage'a da kaydet
         localStorage.setItem(profileKey, JSON.stringify(tempProfileData));
+
+        // Şimdi becerileri User_Skill tablosuna kaydet
+        try {
+          // Önce mevcut User_Skill kayıtlarını al
+          const currentSkillsResult = await swapsService.getUserSkills(userId);
+          const currentSkills = currentSkillsResult.success ? currentSkillsResult.data : { offering: [], seeking: [] };
+
+          // Tüm skill'leri al (skill_id bulmak için)
+          const allSkillsList = await skillsService.getAllSkills();
+          const skillsMap = new Map();
+          allSkillsList.forEach(skill => {
+            const key = `${skill.name.toLowerCase()}_${skill.category.toLowerCase()}`;
+            skillsMap.set(key, skill.id);
+          });
+
+          // Mevcut kayıtları sil (önce sil, sonra ekle - basit yaklaşım)
+          const allCurrentUserSkills = [
+            ...(currentSkills.offering || []),
+            ...(currentSkills.seeking || [])
+          ];
+          for (const userSkill of allCurrentUserSkills) {
+            await swapsService.deleteUserSkill(userSkill.id);
+          }
+
+          // Offering becerilerini ekle (sunduğu beceriler)
+          for (const [categoryKey, category] of Object.entries(skillCategories)) {
+            const skills = tempProfileData[categoryKey] || [];
+            for (const skillName of skills) {
+              const skillKey = `${skillName.toLowerCase()}_${category.label.toLowerCase()}`;
+              const skillId = skillsMap.get(skillKey);
+              if (skillId) {
+                await swapsService.addUserSkill(skillId, 'Offering');
+              }
+            }
+          }
+
+          // Seeking becerilerini ekle (öğrenmek istediği beceriler)
+          for (const [categoryKey, category] of Object.entries(skillCategories)) {
+            const skills = tempProfileData.wantToLearn?.[categoryKey] || [];
+            for (const skillName of skills) {
+              const skillKey = `${skillName.toLowerCase()}_${category.label.toLowerCase()}`;
+              const skillId = skillsMap.get(skillKey);
+              if (skillId) {
+                await swapsService.addUserSkill(skillId, 'Seeking');
+              }
+            }
+          }
+        } catch (skillError) {
+          console.error('Beceriler User_Skill tablosuna kaydedilirken hata:', skillError);
+          // Hata olsa bile profil kaydedildi, sadece uyarı ver
+          setSnackbar({
+            open: true,
+            message: 'Profil kaydedildi, ancak beceriler kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.',
+            severity: 'warning',
+          });
+        }
+
         setHasUnsavedChanges(false);
         setIsEditing(false);
         setSnackbar({
           open: true,
-          message: 'Profil bilgileriniz başarıyla kaydedildi!',
+          message: 'Profil bilgileriniz ve becerileriniz başarıyla kaydedildi!',
           severity: 'success',
         });
       } else {
@@ -597,6 +655,8 @@ const ProfilePage = () => {
   const menuItems = [
     { path: '/profile', label: 'Profil', icon: '👤' },
     { path: '/discover', label: 'Keşfet', icon: '🔍' },
+    { path: '/requests', label: 'İsteklerim', icon: '📬' },
+    { path: '/messages', label: 'Mesajlar', icon: '💬' },
     { path: '/suggestions', label: 'Öneriler', icon: '💡' },
   ];
 
