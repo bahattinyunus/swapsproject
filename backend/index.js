@@ -1871,6 +1871,14 @@ app.get('/swaps/reciprocal', authenticateToken, async (req, res) => {
                     AND us_a_offering.user_id = $1
                     AND us_a_offering.type = 'Offering'
                 )
+                AND NOT EXISTS (
+                    -- Koşul 3: A ile B arasında kabul edilmiş bir swap request yok
+                    SELECT 1
+                    FROM Swap_Requests sr
+                    WHERE ((sr.sender_id = $1 AND sr.receiver_id = u.id) 
+                           OR (sr.sender_id = u.id AND sr.receiver_id = $1))
+                    AND sr.status = 'Accepted'
+                )
                 ORDER BY u.kullanici_adi
             `;
 
