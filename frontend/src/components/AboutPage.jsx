@@ -7,7 +7,6 @@ const AboutPage = () => {
   const teamMembers = [
     'Yakup Eroğlu',
     'Efil Saylam',
-    'Ömer Faruk Çerçil',
     'Şiray Sanem Bozdoğan'
   ];
 

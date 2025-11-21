@@ -190,13 +190,13 @@ npm run dev
 
 **Mock User 1:**
 ```
-Kullanıcı Adı: user
+Email: user@gmail.com
 Şifre: user
 ```
 
 **Mock User 2:**
 ```
-Kullanıcı Adı: test
+Email: test@gmail.com
 Şifre: test
 ```
 
@@ -207,7 +207,6 @@ Email: admin1@gmail.com
 ```
 
 > **Not:** 
-> - Mock kullanıcılar için email alanına kullanıcı adını yazın (örn: "user")
 > - Demo için sisteme yeni kullanıcı kaydı da yapabilirsiniz
 > - Kayıt için herhangi bir doğrulama gerekmez
 
@@ -256,7 +255,7 @@ POST /api/auth/login
 Content-Type: application/json
 
 {
-  "email": "user",
+  "email": "user@gmail.com",
   "password": "user"
 }
 ```
@@ -268,14 +267,14 @@ Content-Type: application/json
   "user": {
     "id": 100001,
     "username": "user",
-    "email": "user@demo.com",
+    "email": "user@gmail.com",
     "role": "user"
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-> **Not:** Mock kullanıcılar için email alanına kullanıcı adını yazın: `"user"` veya `"test"`
+> **Not:** Mock kullanıcılar için email: `"user@gmail.com"` (şifre: `"user"`) veya `"test@gmail.com"` (şifre: `"test"`)
 
 ---
 
@@ -660,7 +659,7 @@ DELETE /api/admin/users/:userId
 
 ### 1. Hızlı Başlangıç (Mock Kullanıcı ile)
 1. Ana sayfada "Giriş Yap" butonuna tıklayın
-2. Email alanına: `user` yazın
+2. Email alanına: `user@gmail.com` yazın
 3. Şifre alanına: `user` yazın
 4. Giriş yapın ve platformu keşfedin!
 

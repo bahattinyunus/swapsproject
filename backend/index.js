@@ -252,32 +252,32 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         // Mock kullanıcı kontrolü (Demo için)
-        // Mock User 1: user / user
-        if (email === 'user' && sifre === 'user') {
-            const token = generateToken(100001, 'user@demo.com', 'user');
+        // Mock User 1: user@gmail.com / user
+        if (email === 'user@gmail.com' && sifre === 'user') {
+            const token = generateToken(100001, 'user@gmail.com', 'user');
             
             return res.status(200).json({
                 message: 'Giris basarili! (Demo User)',
                 user: {
                     id: 100001,
                     username: 'user',
-                    email: 'user@demo.com',
+                    email: 'user@gmail.com',
                     role: 'user'
                 },
                 token: token
             });
         }
 
-        // Mock User 2: test / test
-        if (email === 'test' && sifre === 'test') {
-            const token = generateToken(100002, 'test@demo.com', 'user');
+        // Mock User 2: test@gmail.com / test
+        if (email === 'test@gmail.com' && sifre === 'test') {
+            const token = generateToken(100002, 'test@gmail.com', 'user');
             
             return res.status(200).json({
                 message: 'Giris basarili! (Demo User)',
                 user: {
                     id: 100002,
                     username: 'test',
-                    email: 'test@demo.com',
+                    email: 'test@gmail.com',
                     role: 'user'
                 },
                 token: token
