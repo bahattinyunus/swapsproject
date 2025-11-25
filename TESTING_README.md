@@ -1,13 +1,13 @@
-# 🧪 SwapS - Test Senaryoları Rehberi
+# SwapS - Test Senaryoları Rehberi
 
-## 🎓 Hoca Talimatı
+## Hoca Talimatı
 > "Her grup, uygulamasındaki temel fonksiyonlar için test senaryoları hazırlayacaktır."
 
 Bu dokümanda SwapS projesinin **tüm temel fonksiyonları** için hazırlanmış **93 test senaryosu** bulunmaktadır.
 
 ---
 
-## 📊 Test Özeti
+## Test Özeti
 
 ### Toplam Test Sayısı: **93 Test**
 
@@ -24,7 +24,7 @@ Bu dokümanda SwapS projesinin **tüm temel fonksiyonları** için hazırlanmı�
 
 ---
 
-## 🚀 Hızlı Başlangıç
+## Hızlı Başlangıç
 
 ### 1. Backend Testlerini Çalıştır
 ```bash
@@ -51,29 +51,29 @@ npm run test:coverage
 
 ---
 
-## 📖 Detaylı Dokümantasyon
+## Detaylı Dokümantasyon
 
 Tüm test senaryolarının detaylı açıklaması için:
-👉 [TEST_DOCUMENTATION.md](./TEST_DOCUMENTATION.md)
+ [TEST_DOCUMENTATION.md](./TEST_DOCUMENTATION.md)
 
 ---
 
-## ✨ Öne Çıkan Test Senaryoları
+## Öne Çıkan Test Senaryoları
 
-### 🔐 Güvenlik Testleri
+### Güvenlik Testleri
 - SQL Injection koruması
 - XSS koruması
 - Token validasyonu
 - Yetkilendirme kontrolleri
 
-### 🎯 Fonksiyonel Testleri
+### Fonksiyonel Testleri
 - Kullanıcı kaydı ve girişi
 - Profil yönetimi
 - Eşleşme istekleri
 - Mesajlaşma sistemi
 - Yetenek yönetimi
 
-### 💻 UI Testleri
+### UI Testleri
 - Form validasyonları
 - Kullanıcı etkileşimleri
 - Hata mesajları
@@ -81,7 +81,7 @@ Tüm test senaryolarının detaylı açıklaması için:
 
 ---
 
-## 📈 Test Coverage
+## Test Coverage
 
 ### Backend: **%83**
 - Auth: %85
@@ -98,7 +98,7 @@ Tüm test senaryolarının detaylı açıklaması için:
 
 ---
 
-## 🎬 Demo
+## Demo
 
 ### Backend Test Çıktısı
 ```
@@ -129,13 +129,13 @@ Test Files  2 passed (2)
 
 ---
 
-## 🛠️ Geliştirme Süreci
+## Geliştirme Süreci
 
 ### Test-Driven Development (TDD) Yaklaşımı
-1. ✅ Test senaryoları yazıldı
-2. ✅ Kodlar implement edildi
-3. ✅ Testler çalıştırıldı
-4. ✅ Refactoring yapıldı
+1. Test senaryoları yazıldı
+2. Kodlar implement edildi
+3. Testler çalıştırıldı
+4. Refactoring yapıldı
 
 ### CI/CD Entegrasyonu
 Testler her commit'te otomatik olarak çalıştırılabilir:
@@ -154,33 +154,33 @@ jobs:
 
 ---
 
-## 🎯 Temel Fonksiyonlar ve Test Kapsamı
+## Temel Fonksiyonlar ve Test Kapsamı
 
-### 1. Kimlik Doğrulama ✅
+### 1. Kimlik Doğrulama
 - [x] Kullanıcı kaydı
 - [x] Kullanıcı girişi
 - [x] Token yönetimi
 - [x] Oturum kontrolü
 
-### 2. Profil Yönetimi ✅
+### 2. Profil Yönetimi
 - [x] Profil görüntüleme
 - [x] Profil güncelleme
 - [x] Hesap silme
 - [x] Güvenlik kontrolleri
 
-### 3. Yetenek Yönetimi ✅
+### 3. Yetenek Yönetimi
 - [x] Yetenek listeleme
 - [x] Kategori yönetimi
 - [x] Kullanıcı becerileri (Offering/Seeking)
 - [x] Beceri ekleme/silme
 
-### 4. Eşleşme Sistemi ✅
+### 4. Eşleşme Sistemi
 - [x] Eşleşme isteği gönderme
 - [x] İstek kabul/red etme
 - [x] İstek listeleme
 - [x] Karşılıklı eşleşme
 
-### 5. Mesajlaşma ✅
+### 5. Mesajlaşma
 - [x] Mesaj gönderme
 - [x] Konuşma görüntüleme
 - [x] Konuşma listeleme
@@ -190,14 +190,14 @@ jobs:
 
 ## 📝 Test Yazmada Kullanılan Standartlar
 
-### ✅ İyi Test Özellikleri
+### İyi Test Özellikleri
 - **Açıklayıcı**: Her test ne test ettiğini açıkça belirtir
 - **Bağımsız**: Testler birbirinden bağımsız çalışır
 - **Tekrarlanabilir**: Her çalıştırmada aynı sonucu verir
 - **Hızlı**: Testler hızlı çalışır
 - **Kapsamlı**: Edge case'leri de test eder
 
-### 📏 Test Metrikleri
+### Test Metrikleri
 - Line Coverage: %85+
 - Branch Coverage: %78+
 - Function Coverage: %90+
@@ -205,21 +205,21 @@ jobs:
 
 ---
 
-## 🔍 Test Kategorileri
+## Test Kategorileri
 
-### 🟢 Pozitif Testler (Happy Path)
+### Pozitif Testler (Happy Path)
 Sistemin beklendiği gibi çalıştığını doğrular
 - Başarılı kayıt/giriş
 - Başarılı mesaj gönderme
 - Başarılı eşleşme
 
-### 🔴 Negatif Testler (Error Cases)
+### Negatif Testler (Error Cases)
 Hata durumlarını test eder
 - Eksik alan validasyonu
 - Yanlış kimlik bilgileri
 - Yetkisiz erişim denemeleri
 
-### 🔒 Güvenlik Testleri
+### Güvenlik Testleri
 Güvenlik açıklarını test eder
 - SQL Injection
 - XSS saldırıları
@@ -227,7 +227,7 @@ Güvenlik açıklarını test eder
 
 ---
 
-## 💡 Test Örnekleri
+## Test Örnekleri
 
 ### Backend Test Örneği
 ```javascript
@@ -259,7 +259,7 @@ test('TEST 1: Login formu doğru şekilde render edilmeli', () => {
 
 ---
 
-## 🏆 Başarı Kriterleri
+## Başarı Kriterleri
 
 ✅ Tüm testler başarıyla geçiyor
 ✅ Code coverage %80'in üzerinde
@@ -270,12 +270,12 @@ test('TEST 1: Login formu doğru şekilde render edilmeli', () => {
 
 ---
 
-## 📞 Destek
+## Destek
 
 Test senaryoları hakkında sorularınız için:
-- 📧 Email: [ekip e-postası]
-- 💬 Slack: #testing-channel
-- 📚 Detaylı Dok: [TEST_DOCUMENTATION.md](./TEST_DOCUMENTATION.md)
+- Email: [ekip e-postası]
+- Slack: #testing-channel
+- Detaylı Dok: [TEST_DOCUMENTATION.md](./TEST_DOCUMENTATION.md)
 
 ---
 

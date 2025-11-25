@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀 Canlı Demo
+## Canlı Demo
 
 **Frontend:** [https://swaps.com.tr](https://swaps.com.tr)
 
@@ -17,15 +17,15 @@
 
 ## 📋 Özellikler
 
-- ✅ **HTML5 Semantic Markup**: Modern web standartları ile erişilebilir yapı
-- ✅ **Kullanıcı Yönetimi**: Kayıt, giriş ve profil ayarları
-- ✅ **Beceri Yönetimi**: Offering (sunulan) ve Seeking (aranan) beceriler
-- ✅ **Karşılıklı Eşleşme**: İki yönlü beceri eşleşmesi algoritması
-- ✅ **Proje Sistemi**: Proje oluşturma, düzenleme ve başvuru yapma
-- ✅ **Mesajlaşma**: Kullanıcılar arası gerçek zamanlı mesajlaşma
-- ✅ **Dashboard**: Devam eden işler, teklifler ve öneriler
-- ✅ **Admin Paneli**: Kullanıcı ve beceri yönetimi
-- ✅ **Responsive Tasarım**: Mobil ve desktop uyumlu modern arayüz
+- **HTML5 Semantic Markup**: Modern web standartları ile erişilebilir yapı
+- **Kullanıcı Yönetimi**: Kayıt, giriş ve profil ayarları
+- **Beceri Yönetimi**: Offering (sunulan) ve Seeking (aranan) beceriler
+- **Karşılıklı Eşleşme**: İki yönlü beceri eşleşmesi algoritması
+- **Proje Sistemi**: Proje oluşturma, düzenleme ve başvuru yapma
+- **Mesajlaşma**: Kullanıcılar arası gerçek zamanlı mesajlaşma
+- **Dashboard**: Devam eden işler, teklifler ve öneriler
+- **Admin Paneli**: Kullanıcı ve beceri yönetimi
+- **Responsive Tasarım**: Mobil ve desktop uyumlu modern arayüz
 
 ---
 
@@ -34,24 +34,24 @@
 Proje modern **HTML5 standartlarına** tam uyumludur:
 
 ### Semantic HTML5 Elements
-- ✅ `<header>` - Sayfa başlıkları ve navigasyon
-- ✅ `<nav>` - Navigasyon menüleri
-- ✅ `<main>` - Ana içerik alanı
-- ✅ `<section>` - İçerik bölümleri
-- ✅ `<article>` - Bağımsız içerik blokları
-- ✅ `<footer>` - Sayfa alt bilgisi
+- `<header>` - Sayfa başlıkları ve navigasyon
+- `<nav>` - Navigasyon menüleri
+- `<main>` - Ana içerik alanı
+- `<section>` - İçerik bölümleri
+- `<article>` - Bağımsız içerik blokları
+- `<footer>` - Sayfa alt bilgisi
 
 ### HTML5 Form Features
-- ✅ `<input type="email">` - Email validasyonu
-- ✅ `<input type="password">` - Şifre alanları
-- ✅ `required` attribute - Zorunlu alan kontrolü
-- ✅ `aria-label` - Erişilebilirlik özellikleri
+- `<input type="email">` - Email validasyonu
+- `<input type="password">` - Şifre alanları
+- `required` attribute - Zorunlu alan kontrolü
+- `aria-label` - Erişilebilirlik özellikleri
 
 ### HTML5 Meta Tags
-- ✅ `<!DOCTYPE html>` - HTML5 deklarasyonu
-- ✅ `<meta charset="UTF-8">` - Karakter seti
-- ✅ `<meta name="viewport">` - Responsive tasarım
-- ✅ Open Graph meta tags - Sosyal medya entegrasyonu
+- `<!DOCTYPE html>` - HTML5 deklarasyonu
+- `<meta charset="UTF-8">` - Karakter seti
+- `<meta name="viewport">` - Responsive tasarım
+- Open Graph meta tags - Sosyal medya entegrasyonu
 
 ---
 
@@ -81,7 +81,7 @@ Proje modern **HTML5 standartlarına** tam uyumludur:
 
 ---
 
-## 📥 Kurulum ve Çalıştırma
+## Kurulum ve Çalıştırma
 
 ### Gereksinimler
 - Node.js 18+
@@ -285,7 +285,7 @@ Content-Type: application/json
 GET /api/profile/:userId
 ```
 
-#### Profil Ayarlarını Kaydet 🔒
+#### Profil Ayarlarını Kaydet
 ```http
 POST /api/profile/save-settings
 Content-Type: application/json
@@ -300,7 +300,7 @@ Content-Type: application/json
 }
 ```
 
-#### Hesabı Sil 🔒
+#### Hesabı Sil
 ```http
 DELETE /api/profile/delete-account/:userId
 ```
@@ -329,7 +329,7 @@ GET /api/skills
 }
 ```
 
-#### Yeni Yetenek Ekle 🔒
+#### Yeni Yetenek Ekle
 ```http
 POST /api/skills
 Content-Type: application/json
@@ -340,7 +340,7 @@ Content-Type: application/json
 }
 ```
 
-#### Yetenek Güncelle 🔒
+#### Yetenek Güncelle
 ```http
 PUT /api/skills/:skillId
 Content-Type: application/json
@@ -351,7 +351,7 @@ Content-Type: application/json
 }
 ```
 
-#### Yetenek Sil 🔒
+#### Yetenek Sil
 ```http
 DELETE /api/skills/:skillId
 ```
@@ -393,7 +393,7 @@ GET /user-skills/:userId
 }
 ```
 
-#### Kullanıcıya Beceri Ekle 🔒
+#### Kullanıcıya Beceri Ekle
 ```http
 POST /user-skills
 Content-Type: application/json
@@ -405,7 +405,7 @@ Content-Type: application/json
 ```
 > `type`: "Offering" (sunulan) veya "Seeking" (aranan)
 
-#### Kullanıcıdan Beceri Sil 🔒
+#### Kullanıcıdan Beceri Sil
 ```http
 DELETE /user-skills/:id
 ```
@@ -414,7 +414,7 @@ DELETE /user-skills/:id
 
 ### Karşılıklı Eşleşme (Reciprocal Matching)
 
-#### İki Yönlü Beceri Eşleşmelerini Getir 🔒
+#### İki Yönlü Beceri Eşleşmelerini Getir
 ```http
 GET /swaps/reciprocal
 ```
@@ -466,12 +466,12 @@ GET /projects
 GET /projects/:id
 ```
 
-#### Kullanıcının Projeleri 🔒
+#### Kullanıcının Projeleri
 ```http
 GET /projects/my
 ```
 
-#### Yeni Proje Oluştur 🔒
+#### Yeni Proje Oluştur
 ```http
 POST /projects
 Content-Type: application/json
@@ -482,7 +482,7 @@ Content-Type: application/json
 }
 ```
 
-#### Proje Güncelle 🔒
+#### Proje Güncelle
 ```http
 PUT /projects/:id
 Content-Type: application/json
@@ -493,7 +493,7 @@ Content-Type: application/json
 }
 ```
 
-#### Proje Sil 🔒
+#### Proje Sil
 ```http
 DELETE /projects/:id
 ```
@@ -502,7 +502,7 @@ DELETE /projects/:id
 
 ### Başvurular (Matches)
 
-#### Kullanıcının Başvurularını Listele 🔒
+#### Kullanıcının Başvurularını Listele
 ```http
 GET /matches/user
 ```
@@ -516,7 +516,7 @@ GET /matches/user
 }
 ```
 
-#### Projeye Başvur 🔒
+#### Projeye Başvur
 ```http
 POST /matches
 Content-Type: application/json
@@ -526,7 +526,7 @@ Content-Type: application/json
 }
 ```
 
-#### Başvuru Durumu Güncelle 🔒
+#### Başvuru Durumu Güncelle
 ```http
 PUT /matches/:id/status
 Content-Type: application/json
@@ -537,7 +537,7 @@ Content-Type: application/json
 ```
 > `status`: "Pending", "Accepted", "Rejected"
 
-#### Başvuru Sil 🔒
+#### Başvuru Sil
 ```http
 DELETE /matches/:id
 ```
@@ -546,7 +546,7 @@ DELETE /matches/:id
 
 ### Dashboard
 
-#### Kullanıcı Görevleri 🔒
+#### Kullanıcı Görevleri
 
 **Devam Eden İşler:**
 ```http
@@ -567,7 +567,7 @@ GET /user/tasks?filter=suggestions
 
 ### Mesajlaşma (Messages)
 
-#### Yeni Mesaj Gönder 🔒
+#### Yeni Mesaj Gönder
 ```http
 POST /api/messages
 Content-Type: application/json
@@ -578,12 +578,12 @@ Content-Type: application/json
 }
 ```
 
-#### Tüm Konuşmaları Listele 🔒
+#### Tüm Konuşmaları Listele
 ```http
 GET /api/messages/conversations
 ```
 
-#### İki Kullanıcı Arasındaki Konuşmayı Getir 🔒
+#### İki Kullanıcı Arasındaki Konuşmayı Getir
 ```http
 GET /api/messages/conversation/:otherUserId
 ```
@@ -592,7 +592,7 @@ GET /api/messages/conversation/:otherUserId
 
 ### Eşleşme İstekleri (Swap Requests)
 
-#### Eşleşme İsteği Gönder 🔒
+#### Eşleşme İsteği Gönder
 ```http
 POST /swap-requests
 Content-Type: application/json
@@ -602,7 +602,7 @@ Content-Type: application/json
 }
 ```
 
-#### Gelen/Giden İstekleri Getir 🔒
+#### Gelen/Giden İstekleri Getir
 ```http
 GET /swap-requests
 ```
@@ -617,7 +617,7 @@ GET /swap-requests
 }
 ```
 
-#### İstek Durumu Güncelle 🔒
+#### İstek Durumu Güncelle
 ```http
 PUT /swap-requests/:id/status
 Content-Type: application/json
@@ -630,7 +630,7 @@ Content-Type: application/json
 
 ---
 
-### Admin Paneli 🔒
+### Admin Paneli
 
 #### Tüm Kullanıcıları Listele
 ```http
@@ -689,7 +689,7 @@ DELETE /api/admin/users/:userId
 
 ---
 
-## 🏗️ Proje Yapısı
+## Proje Yapısı
 
 ```
 swapsproject/
@@ -731,7 +731,7 @@ swapsproject/
 
 ---
 
-## 🐛 Hata Ayıklama
+## Hata Ayıklama
 
 ### Backend bağlanamıyor?
 - PostgreSQL servisinin çalıştığından emin olun
@@ -749,7 +749,7 @@ swapsproject/
 
 ---
 
-## 🤝 Katkıda Bulunma
+## Katkıda Bulunma
 
 Bu proje açık kaynaklıdır. Katkıda bulunmak için:
 
@@ -761,13 +761,13 @@ Bu proje açık kaynaklıdır. Katkıda bulunmak için:
 
 ---
 
-## 📄 Lisans
+## Lisans
 
 Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
 
 ---
 
-## 📞 İletişim
+## İletişim
 
 Proje ile ilgili sorularınız için:
 - **GitHub:** [yakuperoglu](https://github.com/yakuperoglu)
@@ -775,8 +775,8 @@ Proje ile ilgili sorularınız için:
 
 ---
 
-## 🙏 Teşekkürler
+## Teşekkürler
 
 SwapS platformunu kullandığınız için teşekkür ederiz! Becerilerinizi paylaşarak öğrenme topluluğuna katkıda bulunun.
 
-**Happy Swapping! 🚀**
+**Happy Swapping!**

@@ -1,6 +1,6 @@
-# 🧪 SwapS Projesi Test Dokümantasyonu
+# SwapS Projesi Test Dokümantasyonu
 
-## 📋 İçindekiler
+## İçindekiler
 1. [Test Stratejisi](#test-stratejisi)
 2. [Backend Testleri](#backend-testleri)
 3. [Frontend Testleri](#frontend-testleri)
@@ -10,7 +10,7 @@
 
 ---
 
-## 🎯 Test Stratejisi
+## Test Stratejisi
 
 ### Test Türleri
 - **Unit Tests**: Tekil fonksiyonlar ve componentler
@@ -23,7 +23,7 @@
 
 ---
 
-## 🔧 Backend Testleri
+## Backend Testleri
 
 ### Kurulum
 ```bash
@@ -45,20 +45,20 @@ backend/
 ### 1. Auth API Testleri (`auth.test.js`)
 
 #### Test Senaryoları:
-✅ **Kullanıcı Kaydı (4 test)**
+**Kullanıcı Kaydı (4 test)**
 - TEST 1: Geçerli bilgilerle kayıt başarılı olmalı
 - TEST 2: Eksik alan ile kayıt başarısız olmalı
 - TEST 3: Zayıf şifre kontrolü
 - TEST 4: Aynı email ile tekrar kayıt başarısız olmalı
 
-✅ **Kullanıcı Girişi (5 test)**
+**Kullanıcı Girişi (5 test)**
 - TEST 5: Geçerli bilgilerle giriş başarılı olmalı
 - TEST 6: Yanlış şifre ile giriş başarısız olmalı
 - TEST 7: Olmayan kullanıcı ile giriş başarısız olmalı
 - TEST 8: Eksik alan ile giriş başarısız olmalı
 - TEST 9: Admin girişi başarılı olmalı
 
-✅ **Token Validasyonu (3 test)**
+**Token Validasyonu (3 test)**
 - TEST 10: Geçerli token ile korumalı endpoint erişilebilmeli
 - TEST 11: Token olmadan korumalı endpoint erişilememeli
 - TEST 12: Geçersiz token ile erişim reddedilmeli
@@ -70,20 +70,20 @@ backend/
 ### 2. Skills API Testleri (`skills.test.js`)
 
 #### Test Senaryoları:
-✅ **Yetenek Listeleme (3 test)**
+**Yetenek Listeleme (3 test)**
 - TEST 1: Yetenekler listesi başarıyla getirilmeli
 - TEST 2: Yetenekler kategorilere göre sıralı olmalı
 - TEST 3: Varsayılan yetenekler mevcut olmalı
 
-✅ **Kategori Yönetimi (2 test)**
+**Kategori Yönetimi (2 test)**
 - TEST 4: Kategoriler başarıyla getirilmeli
 - TEST 5: Temel kategoriler mevcut olmalı
 
-✅ **Yetenek Ekleme (2 test)**
+**Yetenek Ekleme (2 test)**
 - TEST 6: Admin yeni yetenek ekleyebilmeli
 - TEST 7: Eksik alan ile yetenek eklenmemeli
 
-✅ **Kullanıcı Becerileri (5 test)**
+**Kullanıcı Becerileri (5 test)**
 - TEST 8: Kullanıcı becerileri getirilmeli
 - TEST 9: Kullanıcı kendine beceri ekleyebilmeli (Offering)
 - TEST 10: Kullanıcı kendine beceri ekleyebilmeli (Seeking)
@@ -97,24 +97,24 @@ backend/
 ### 3. Swap Requests API Testleri (`swapRequests.test.js`)
 
 #### Test Senaryoları:
-✅ **İstek Gönderme (5 test)**
+**İstek Gönderme (5 test)**
 - TEST 1: Kullanıcı başka kullanıcıya istek gönderebilmeli
 - TEST 2: Kullanıcı kendine istek gönderememeli
 - TEST 3: Eksik receiver_id ile istek gönderilememeli
 - TEST 4: Token olmadan istek gönderilememeli
 - TEST 5: Olmayan kullanıcıya istek gönderilememeli
 
-✅ **İstek Listeleme (2 test)**
+**İstek Listeleme (2 test)**
 - TEST 6: Kullanıcı kendi isteklerini görebilmeli
 - TEST 7: Token olmadan istekler görüntülenememeli
 
-✅ **İstek Güncelleme (4 test)**
+**İstek Güncelleme (4 test)**
 - TEST 8: Alıcı kullanıcı isteği kabul edebilmeli
 - TEST 9: Gönderici kullanıcı isteği kabul/red edememeli
 - TEST 10: Geçersiz status ile güncelleme başarısız olmalı
 - TEST 11: Token olmadan durum güncellenememeli
 
-✅ **Karşılıklı Eşleşme (1 test)**
+**Karşılıklı Eşleşme (1 test)**
 - TEST 12: Aynı kullanıcılar arasında çift yönlü istek kontrolü
 
 **Toplam: 12 Test Senaryosu**
@@ -124,7 +124,7 @@ backend/
 ### 4. Messages API Testleri (`messages.test.js`)
 
 #### Test Senaryoları:
-✅ **Mesaj Gönderme (7 test)**
+**Mesaj Gönderme (7 test)**
 - TEST 1: Kabul edilmiş eşleşmeler arası mesaj gönderilebilmeli
 - TEST 2: Eksik content ile mesaj gönderilememeli
 - TEST 3: Eksik receiver_id ile mesaj gönderilememeli
@@ -133,17 +133,17 @@ backend/
 - TEST 6: Kabul edilmemiş eşleşmelere mesaj gönderilememeli
 - TEST 7: Boş mesaj gönderilememeli
 
-✅ **Konuşma Görüntüleme (3 test)**
+**Konuşma Görüntüleme (3 test)**
 - TEST 8: Kullanıcı konuşmalarını görebilmeli
 - TEST 9: Token olmadan konuşma görüntülenememeli
 - TEST 10: Eşleşme olmayan kullanıcıyla konuşma görüntülenememeli
 
-✅ **Konuşma Listeleme (3 test)**
+**Konuşma Listeleme (3 test)**
 - TEST 11: Kullanıcı tüm konuşmalarını listeleyebilmeli
 - TEST 12: Token olmadan konuşmalar listelenememeli
 - TEST 13: Konuşmalarda son mesaj bilgisi olmalı
 
-✅ **Mesaj Özelliği (2 test)**
+**Mesaj Özelliği (2 test)**
 - TEST 14: Mesajlar zaman sırasına göre sıralı olmalı
 - TEST 15: Uzun mesaj içeriği gönderilebilmeli
 
@@ -154,25 +154,25 @@ backend/
 ### 5. Profile API Testleri (`profile.test.js`)
 
 #### Test Senaryoları:
-✅ **Profil Görüntüleme (5 test)**
+**Profil Görüntüleme (5 test)**
 - TEST 1: Kullanıcı kendi profilini görebilmeli
 - TEST 2: Profil bilgileri eksiksiz olmalı
 - TEST 3: Başka kullanıcının profilini görebilmeli
 - TEST 4: Olmayan kullanıcı ID ile 404 dönmeli
 - TEST 5: Token olmadan profil görüntüleme kontrolü
 
-✅ **Profil Güncelleme (4 test)**
+**Profil Güncelleme (4 test)**
 - TEST 6: Kullanıcı profil ayarlarını kaydedebilmeli
 - TEST 7: Eksik userId ile kaydetme başarısız olmalı
 - TEST 8: Token olmadan profil kaydedilememelik
 - TEST 9: Başka kullanıcının profilini güncelleyememeli
 
-✅ **Hesap Silme (3 test)**
+**Hesap Silme (3 test)**
 - TEST 10: Kullanıcı kendi hesabını silebilmeli
 - TEST 11: Token olmadan hesap silinememeli
 - TEST 12: Silinen hesapla giriş yapılamamalı
 
-✅ **Güvenlik (2 test)**
+**Güvenlik (2 test)**
 - TEST 13: SQL Injection koruması olmalı
 - TEST 14: XSS koruması olmalı
 
@@ -180,7 +180,7 @@ backend/
 
 ---
 
-## 🖼️ Frontend Testleri
+## Frontend Testleri
 
 ### Kurulum
 ```bash
@@ -204,29 +204,29 @@ frontend/
 ### 1. Login Component Testleri (`Login.test.jsx`)
 
 #### Test Senaryoları:
-✅ **Sayfa Render (3 test)**
+**Sayfa Render (3 test)**
 - TEST 1: Login formu doğru şekilde render edilmeli
 - TEST 2: Giriş butonu mevcut olmalı
 - TEST 3: Kayıt ol linki mevcut olmalı
 
-✅ **Form Validasyon (3 test)**
+**Form Validasyon (3 test)**
 - TEST 4: Boş form ile giriş yapılamamalı
 - TEST 5: Sadece email girişi yeterli olmamalı
 - TEST 6: Geçersiz email formatı uyarı vermeli
 
-✅ **Başarılı Giriş (2 test)**
+**Başarılı Giriş (2 test)**
 - TEST 7: Geçerli bilgilerle giriş başarılı olmalı
 - TEST 8: Başarılı girişte token localStorage'a kaydedilmeli
 
-✅ **Başarısız Giriş (2 test)**
+**Başarısız Giriş (2 test)**
 - TEST 9: Yanlış şifre ile hata mesajı gösterilmeli
 - TEST 10: Network hatası durumunda kullanıcı bilgilendirilmeli
 
-✅ **Şifre Görünürlüğü (2 test)**
+**Şifre Görünürlüğü (2 test)**
 - TEST 11: Şifre başlangıçta gizli olmalı
 - TEST 12: Şifre göster butonu çalışmalı
 
-✅ **Loading State (1 test)**
+**Loading State (1 test)**
 - TEST 13: Giriş yaparken loading gösterilmeli
 
 **Toplam: 13 Test Senaryosu**
@@ -236,36 +236,36 @@ frontend/
 ### 2. Register Component Testleri (`Register.test.jsx`)
 
 #### Test Senaryoları:
-✅ **Sayfa Render (4 test)**
+**Sayfa Render (4 test)**
 - TEST 1: Register formu doğru şekilde render edilmeli
 - TEST 2: Tüm gerekli alanlar mevcut olmalı
 - TEST 3: Kayıt ol butonu mevcut olmalı
 - TEST 4: Giriş yap linki mevcut olmalı
 
-✅ **Form Validasyon (5 test)**
+**Form Validasyon (5 test)**
 - TEST 5: Boş form ile kayıt olunamamalı
 - TEST 6: Sadece username yeterli olmamalı
 - TEST 7: Geçersiz email formatı kabul edilmemeli
 - TEST 8: Kısa şifre kabul edilmemeli
 - TEST 9: Şifre onayı eşleşmeli
 
-✅ **Başarılı Kayıt (3 test)**
+**Başarılı Kayıt (3 test)**
 - TEST 10: Geçerli bilgilerle kayıt başarılı olmalı
 - TEST 11: Başarılı kayıtta token localStorage'a kaydedilmeli
 - TEST 12: Başarılı kayıtta profil sayfasına yönlendirilmeli
 
-✅ **Başarısız Kayıt (2 test)**
+**Başarısız Kayıt (2 test)**
 - TEST 13: Email zaten kullanımda ise hata mesajı gösterilmeli
 - TEST 14: Network hatası durumunda kullanıcı bilgilendirilmeli
 
-✅ **Kullanıcı Deneyimi (1 test)**
+**Kullanıcı Deneyimi (1 test)**
 - TEST 15: Kayıt sırasında loading gösterilmeli
 
 **Toplam: 15 Test Senaryosu**
 
 ---
 
-## 🚀 Test Çalıştırma
+## Test Çalıştırma
 
 ### Backend Testleri
 ```bash
@@ -301,7 +301,7 @@ npm run test:all
 
 ---
 
-## 📊 Test Raporları
+## Test Raporları
 
 ### Backend Test Sonuçları
 ```
@@ -324,7 +324,7 @@ Time:        ~8s
 
 ---
 
-## 📈 Kapsam Analizi
+## Kapsam Analizi
 
 ### Backend Coverage
 | Module | Statements | Branches | Functions | Lines |
@@ -345,7 +345,7 @@ Time:        ~8s
 
 ---
 
-## ✅ Test Checklist
+## Test Checklist
 
 ### Backend
 - [x] Auth API endpoints
@@ -367,14 +367,14 @@ Time:        ~8s
 
 ---
 
-## 🔍 Test Best Practices
+## Test Best Practices
 
 ### 1. Test İsimlendirme
 ```javascript
-// ✅ Good
+// Good
 test('TEST 1: Kullanıcı başarıyla giriş yapabilmeli', ...)
 
-// ❌ Bad
+// Bad
 test('test1', ...)
 ```
 
@@ -418,7 +418,7 @@ beforeEach(() => {
 
 ---
 
-## 🐛 Hata Ayıklama
+## Hata Ayıklama
 
 ### Test Başarısız Olursa
 1. Hata mesajını dikkatlice oku
@@ -434,7 +434,7 @@ beforeEach(() => {
 
 ---
 
-## 📚 Referanslar
+## Referanslar
 
 - [Jest Documentation](https://jestjs.io/)
 - [Vitest Documentation](https://vitest.dev/)
@@ -443,9 +443,9 @@ beforeEach(() => {
 
 ---
 
-## 👥 Katkıda Bulunanlar
+## Katkıda Bulunanlar
 
-Test senaryoları SwapS geliştirme ekibi tarafından hazırlanmıştır.
+şiray sanem bozdoğan, efil saylam, yakup eroğlu
 
 **Son Güncelleme**: 21 Kasım 2025
 

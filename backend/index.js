@@ -1583,8 +1583,8 @@ app.delete('/matches/:id', authenticateToken, async (req, res) => {
 // USER SKILLS API - KULLANICI BECERİ YÖNETİMİ
 // ============================================
 
-// 28. KULLANICININ BECERİLERİNİ GETIR (GET /user-skills/:userId)
-app.get('/user-skills/:userId', async (req, res) => {
+// 28. KULLANICININ BECERİLERİNİ GETIR (GET /api/user-skills/:userId)
+app.get('/api/user-skills/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
 
@@ -1643,8 +1643,8 @@ app.get('/user-skills/:userId', async (req, res) => {
     }
 });
 
-// 29. KULLANICIYA BECERİ EKLE (POST /user-skills)
-app.post('/user-skills', authenticateToken, async (req, res) => {
+// 29. KULLANICIYA BECERİ EKLE (POST /api/user-skills)
+app.post('/api/user-skills', authenticateToken, async (req, res) => {
     try {
         const { skill_id, type } = req.body;
         const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si
@@ -1701,8 +1701,8 @@ app.post('/user-skills', authenticateToken, async (req, res) => {
     }
 });
 
-// 30. KULLANICIDAN BECERİ SİL (DELETE /user-skills/:id)
-app.delete('/user-skills/:id', authenticateToken, async (req, res) => {
+// 30. KULLANICIDAN BECERİ SİL (DELETE /api/user-skills/:id)
+app.delete('/api/user-skills/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params; // user_skill id
         const user_id = req.user.id; // Token'dan gelen kullanıcı ID'si
@@ -1757,7 +1757,7 @@ app.delete('/user-skills/:id', authenticateToken, async (req, res) => {
 // ============================================
 
 // DEBUG: User_Skill verilerini kontrol et (geçici)
-app.get('/debug/user-skills', authenticateToken, async (req, res) => {
+app.get('/api/debug/user-skills', authenticateToken, async (req, res) => {
     try {
         const user_id = req.user.id;
         
