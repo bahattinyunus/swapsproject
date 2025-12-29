@@ -81,12 +81,13 @@ Proje modern **HTML5 standartlarına** tam uyumludur:
 
 ---
 
-## Kurulum ve Çalıştırma
+## Kurulum ve Çalıştırma (Docker ile)
+
+Proje artık Docker ile tam izole bir şekilde çalışmaktadır. Bilgisayarınızdaki mevcut veritabanı kurulumlarını etkilemez.
 
 ### Gereksinimler
-- Node.js 18+
-- PostgreSQL 14+
-- npm veya yarn
+- **Docker Desktop** (Kurulu ve çalışıyor olmalı)
+- Git
 
 ### 1. Projeyi Klonlayın
 
@@ -95,92 +96,33 @@ git clone https://github.com/yakuperoglu/swapsproject.git
 cd swapsproject
 ```
 
-### 2. PostgreSQL Veritabanı Kurulumu
+### 2. Projeyi Başlatın
 
-PostgreSQL'i başlatın ve veritabanını oluşturun:
+Tek bir komutla tüm sistemi (Frontend, Backend, Veritabanı) ayağa kaldırın:
 
-```bash
-# PostgreSQL'e bağlanın
-psql -U postgres
-
-# Veritabanını oluşturun
-CREATE DATABASE swaps_db;
-
-# Çıkış yapın
-\q
+```powershell
+docker-compose up -d --build
 ```
+*(Bu işlem ilk seferde imajların indirilmesi ve oluşturulması nedeniyle birkaç dakika sürebilir)*
 
-### 3. Backend Kurulumu
+**Sistem şu adreslerde çalışacaktır:**
+- **Frontend (Ana Site):** [http://localhost](http://localhost)
+- **Backend API:** [http://localhost:3005](http://localhost:3005)
+- **Veritabanı (PostgreSQL):** `localhost:5435`
 
-```bash
-cd backend
-npm install
-```
+### 3. Veritabanı
+Veritabanı tabloları ve varsayılan veriler (yetenek listesi vb.) otomatik olarak oluşturulur. Ekstra bir kurulum yapmanıza gerek yoktur.
 
-**Backend .env dosyası oluşturun:**
+**Eski Token Uyarısı:**
+Veritabanı sıfırdan oluşturulduğu için eski kullanıcı kayıtlarınız silinmiştir. Sisteme giriş yapmadan önce **yeni bir üyelik oluşturmanız** gerekmektedir.
 
-```bash
-# .env dosyası oluşturun
-touch .env
-```
-
-**Backend .env içeriği:**
-
-```env
-NODE_ENV=production
-PORT=3000
-
-# PostgreSQL Veritabanı Bağlantısı
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=your_password
-DB_NAME=swaps_db
-
-# JWT Secret (güçlü bir anahtar kullanın)
-JWT_SECRET=your_jwt_secret_key_here
-
-# Frontend URL (CORS için)
-FRONTEND_URL=http://localhost:5173
-```
-
-**Backend'i başlatın:**
-
-```bash
-npm start
-# Sunucu http://localhost:3000 adresinde başlatılacak
-```
-
-> **Not:** Veritabanı tabloları ilk çalıştırmada otomatik olarak oluşturulur.
-
-### 4. Frontend Kurulumu
-
-Yeni bir terminal penceresi açın:
-
-```bash
-cd frontend
-npm install
-```
-
-**Frontend .env dosyası oluşturun:**
-
-```bash
-# .env dosyası oluşturun
-touch .env
-```
-
-**Frontend .env içeriği:**
-
-```env
-VITE_API_BASE_URL=http://localhost:3000
-```
-
-**Frontend'i başlatın:**
-
-```bash
-npm run dev
-# Uygulama http://localhost:5173 adresinde açılacak
-```
+### Manuel Veritabanı Erişimi (Opsiyonel)
+Veritabanına dışarıdan bağlanmak isterseniz:
+- **Host:** localhost
+- **Port:** 5435
+- **User:** postgres
+- **Password:** postgres
+- **Database:** swaps_db
 
 ---
 
@@ -215,7 +157,7 @@ Email: admin1@gmail.com
 ## 📡 API Endpoint Listesi
 
 ### Base URL
-- **Local:** `http://localhost:3000`
+- **Local:** `http://localhost:3005`
 - **Production:** `https://swaps-backend.onrender.com`
 
 > **Not:** 🔒 işareti olan endpoint'ler için `Authorization: Bearer <TOKEN>` header'ı gereklidir.
@@ -734,18 +676,18 @@ swapsproject/
 ## Hata Ayıklama
 
 ### Backend bağlanamıyor?
-- PostgreSQL servisinin çalıştığından emin olun
-- `.env` dosyasındaki veritabanı bilgilerini kontrol edin
-- Port 3000'in kullanımda olmadığından emin olun
+- Docker servilerinin çalıştığından emin olun: `docker ps`
+- Logları kontrol edin: `docker logs swaps-backend`
+- Port 3005'in (Backend) veya 5435'in (DB) başka bir uygulama tarafından kullanılmadığından emin olun.
 
 ### Frontend backend'e bağlanamıyor?
-- Backend sunucusunun çalıştığından emin olun
-- `.env` dosyasındaki `VITE_API_BASE_URL` adresini kontrol edin
-- CORS ayarlarını kontrol edin
+- Frontend artık Nginx üzerinden çalıştığı için `/api` isteklerini otomatik yönlendirir.
+- Tarayıcı önbelleğini temizlemeyi deneyin.
+- Hata alıyorsanız `docker-compose restart frontend` komutunu deneyin.
 
 ### Token geçersiz hatası?
-- Token'ınızın süresi dolmuş olabilir, yeniden giriş yapın
-- `JWT_SECRET` değişkeninin backend'de doğru ayarlandığından emin olun
+- Token'ınızın süresi dolmuş olabilir, yeniden giriş yapın.
+- Veritabanı sıfırlandığı için eski tokenlar geçersizdir, yeniden kayıt olun.
 
 ---
 
