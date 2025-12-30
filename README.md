@@ -1,724 +1,183 @@
-# SwapS - Beceri Takas Platformu
+# 🌐 SwapS - Geleceğin Beceri Takas Platformu
 
-**SwapS**, kullanıcıların becerilerini paylaşarak karşılıklı öğrenme ve işbirliği yapabileceği modern bir skill swap (beceri takas) platformudur. Kullanıcılar sahip oldukları becerileri sunabilir (Offering), ihtiyaç duydukları becerileri arayabilir (Seeking) ve karşılıklı eşleşmeler bularak projeler üzerinde işbirliği yapabilir.
+<div align="center">
 
----
+![SwapS Banner](https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&h=400&fit=crop)
 
-## Canlı Demo
+**Modern, hızlı ve güvenli beceri paylaşım ekosistemi.**
 
-**Frontend:** [https://swaps.com.tr](https://swaps.com.tr)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-19.2.0-blue.svg)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
-### 🎯 Hızlı Test için Demo Hesaplar:
-- **Kullanıcı Adı:** `user` | **Şifre:** `user`
-- **Kullanıcı Adı:** `test` | **Şifre:** `test`
-- **Admin:** `admin1@gmail.com` | **Şifre:** `admin-1`
+[Canlı Demo](https://swaps.com.tr) • [Dokümantasyon](#-dokümantasyon) • [Hızlı Başlangıç](#-kurulum-ve-çalıştırma-docker-ile) • [İletişim](#-yazar)
 
----
-
-## 📋 Özellikler
-
-- **HTML5 Semantic Markup**: Modern web standartları ile erişilebilir yapı
-- **Kullanıcı Yönetimi**: Kayıt, giriş ve profil ayarları
-- **Beceri Yönetimi**: Offering (sunulan) ve Seeking (aranan) beceriler
-- **Karşılıklı Eşleşme**: İki yönlü beceri eşleşmesi algoritması
-- **Proje Sistemi**: Proje oluşturma, düzenleme ve başvuru yapma
-- **Mesajlaşma**: Kullanıcılar arası gerçek zamanlı mesajlaşma
-- **Dashboard**: Devam eden işler, teklifler ve öneriler
-- **Admin Paneli**: Kullanıcı ve beceri yönetimi
-- **Responsive Tasarım**: Mobil ve desktop uyumlu modern arayüz
+</div>
 
 ---
 
-## 🌐 HTML5 Özellikleri
+## 🚀 Proje Vizyonu
 
-Proje modern **HTML5 standartlarına** tam uyumludur:
-
-### Semantic HTML5 Elements
-- `<header>` - Sayfa başlıkları ve navigasyon
-- `<nav>` - Navigasyon menüleri
-- `<main>` - Ana içerik alanı
-- `<section>` - İçerik bölümleri
-- `<article>` - Bağımsız içerik blokları
-- `<footer>` - Sayfa alt bilgisi
-
-### HTML5 Form Features
-- `<input type="email">` - Email validasyonu
-- `<input type="password">` - Şifre alanları
-- `required` attribute - Zorunlu alan kontrolü
-- `aria-label` - Erişilebilirlik özellikleri
-
-### HTML5 Meta Tags
-- `<!DOCTYPE html>` - HTML5 deklarasyonu
-- `<meta charset="UTF-8">` - Karakter seti
-- `<meta name="viewport">` - Responsive tasarım
-- Open Graph meta tags - Sosyal medya entegrasyonu
+**SwapS**, bilginin ve yeteneğin para birimi kadar değerli olduğu bir geleceği hedefler. Kullanıcıların sahip oldukları becerileri (Offering) bir sermaye olarak kullanmalarını, ihtiyaç duydukları becerileri (Seeking) ise topluluk içi yardımlaşma ile kazanmalarını sağlayan merkeziyetsiz bir yardımlaşma modelidir.
 
 ---
 
-## 🛠️ Kullanılan Teknolojiler
+## 🏗️ Sistem Mimarisi
 
-### Frontend
-- **HTML5** - Semantic markup ve modern web standartları
-- **React 19.2.0** - Modern UI kütüphanesi
-- **Vite** - Hızlı geliştirme ortamı
-- **Material-UI (MUI) v7** - Modern komponent kütüphanesi
-- **React Router DOM** - Sayfa yönlendirme
-- **Axios** - HTTP istekleri
-- **Emotion** - CSS-in-JS styling
+SwapS, yüksek ölçeklenebilirlik için tasarlanmış modern bir tam yığın (full-stack) mimariye sahiptir.
 
-### Backend
-- **Node.js** - JavaScript runtime
-- **Express 5** - Web framework
-- **PostgreSQL** - İlişkisel veritabanı
-- **JWT** - Token tabanlı kimlik doğrulama
-- **bcrypt** - Şifre hashleme
-- **pg** - PostgreSQL client
+### 📊 Veri Akış Diyagramı
 
-### DevOps
-- **Vercel** - Frontend hosting
-- **Render** - Backend hosting
-- **Docker** - Containerization support
-
----
-
-## Kurulum ve Çalıştırma (Docker ile)
-
-Proje artık Docker ile tam izole bir şekilde çalışmaktadır. Bilgisayarınızdaki mevcut veritabanı kurulumlarını etkilemez.
-
-### Gereksinimler
-- **Docker Desktop** (Kurulu ve çalışıyor olmalı)
-- Git
-
-### 1. Projeyi Klonlayın
-
-```bash
-git clone https://github.com/yakuperoglu/swapsproject.git
-cd swapsproject
+```mermaid
+graph TD
+    User((Kullanıcı)) -->|İstek| Frontend[React v19 + MUI]
+    Frontend -->|API Çağrısı| Backend[Node.js + Express]
+    Backend -->|JWT Doğrulama| Middleware[Auth Middleware]
+    Middleware -->|Veri İşleme| Controllers[Business Logic Controllers]
+    Controllers -->|Sorgu| DB[(PostgreSQL)]
+    DB -->|Sonuç| Controllers
+    Controllers -->|JSON Yanıt| Frontend
+    Frontend -->|Arayüz Güncelleme| User
 ```
 
-### 2. Projeyi Başlatın
+---
 
-Tek bir komutla tüm sistemi (Frontend, Backend, Veritabanı) ayağa kaldırın:
+## 📋 Öne Çıkan Özellikler
 
+- **🤖 Akıllı Eşleşme (Reciprocal Matching)**: İki yönlü beceri eşleşmesi algoritması ile doğru kişiyle doğru zamanda tanışın.
+- **🏗️ Proje Yönetimi**: Sadece beceri değil, ortak projeler için ekip arkadaşı bulun.
+- **💬 Gerçek Zamanlı İletişim**: Anlık mesajlaşma sistemi ile işbirliğine hemen başlayın.
+- **🛡️ Güvenli Kimlik Doğrulama**: JWT ve Bcrypt tabanlı endüstri standardı güvenlik katmanı.
+- **📱 Kusursuz Responsive Tasarım**: Mobilde ve masaüstünde mükemmel deneyim.
+
+---
+
+## 🛠️ Teknoloji Yığını
+
+### **Frontend**
+- **React 19.2.0** & **Vite**
+- **Material-UI (MUI) v7**
+- **React Router DOM**
+- **Axios** & **Emotion**
+
+### **Backend**
+- **Node.js** & **Express 5**
+- **PostgreSQL** (pg client)
+- **JWT (JSON Web Token)**
+- **Bcrypt** (Şifre Güvenliği)
+
+### **DevOps & Altyapı**
+- **Docker & Docker Compose**
+- **Vercel** (Frontend)
+- **Render** (Backend)
+
+---
+
+## 🕹️ Kurulum ve Çalıştırma (Docker ile)
+
+Proje, bilgisayarınızdaki mevcut ortamları etkilemeden Docker üzerinde çalışır.
+
+### 1. Hazırlık
+- **Docker Desktop**'ın çalıştığından emin olun.
+- Projeyi klonlayın:
+  ```bash
+  git clone https://github.com/bahattinyunus/swapsproject.git
+  cd swapsproject
+  ```
+
+### 2. Tek Komutla Başlatma
 ```powershell
 docker-compose up -d --build
 ```
-*(Bu işlem ilk seferde imajların indirilmesi ve oluşturulması nedeniyle birkaç dakika sürebilir)*
 
-**Sistem şu adreslerde çalışacaktır:**
-- **Frontend (Ana Site):** [http://localhost](http://localhost)
+**Sistem Adresleri:**
+- **Frontend:** [http://localhost](http://localhost)
 - **Backend API:** [http://localhost:3005](http://localhost:3005)
-- **Veritabanı (PostgreSQL):** `localhost:5435`
-
-### 3. Veritabanı
-Veritabanı tabloları ve varsayılan veriler (yetenek listesi vb.) otomatik olarak oluşturulur. Ekstra bir kurulum yapmanıza gerek yoktur.
-
-**Eski Token Uyarısı:**
-Veritabanı sıfırdan oluşturulduğu için eski kullanıcı kayıtlarınız silinmiştir. Sisteme giriş yapmadan önce **yeni bir üyelik oluşturmanız** gerekmektedir.
-
-### Manuel Veritabanı Erişimi (Opsiyonel)
-Veritabanına dışarıdan bağlanmak isterseniz:
-- **Host:** localhost
-- **Port:** 5435
-- **User:** postgres
-- **Password:** postgres
-- **Database:** swaps_db
+- **Veritabanı:** `localhost:5435`
 
 ---
 
-## 👤 Kullanıcı Giriş Bilgileri
+## 💡 Demo Hesaplar
 
-### Demo Kullanıcı Hesapları
-
-**Mock User 1:**
-```
-Email: user@gmail.com
-Şifre: user
-```
-
-**Mock User 2:**
-```
-Email: test@gmail.com
-Şifre: test
-```
-
-**Admin Hesabı:**
-```
-Email: admin1@gmail.com
-Şifre: admin-1
-```
-
-> **Not:** 
-> - Demo için sisteme yeni kullanıcı kaydı da yapabilirsiniz
-> - Kayıt için herhangi bir doğrulama gerekmez
+| Rol | Email | Şifre |
+| :--- | :--- | :--- |
+| **Kullanıcı 1** | `user@gmail.com` | `user` |
+| **Kullanıcı 2** | `test@gmail.com` | `test` |
+| **Admin** | `admin1@gmail.com` | `admin-1` |
 
 ---
 
-## 📡 API Endpoint Listesi
+## 📡 API Endpoint Özetleri
 
-### Base URL
-- **Local:** `http://localhost:3005`
-- **Production:** `https://swaps-backend.onrender.com`
+<details>
+<summary><b>🔐 Kimlik Doğrulama</b></summary>
 
-> **Not:** 🔒 işareti olan endpoint'ler için `Authorization: Bearer <TOKEN>` header'ı gereklidir.
+- `POST /api/auth/register` - Yeni kullanıcı kaydı
+- `POST /api/auth/login` - Giriş ve Token alma
+</details>
 
----
+<details>
+<summary><b>👤 Profil & Beceriler</b></summary>
 
-### Kimlik Doğrulama (Authentication)
+- `GET /api/profile/:userId` - Profil bilgilerini getir
+- `GET /api/skills` - Tüm beceri havuzunu listele
+- `POST /user-skills` - Profiline Offering/Seeking beceri ekle
+</details>
 
-#### Kullanıcı Kaydı
-```http
-POST /api/auth/register
-Content-Type: application/json
+<details>
+<summary><b>🔀 Eşleşme & Mesajlaşma</b></summary>
 
-{
-  "username": "string",
-  "email": "string",
-  "password": "string"
-}
-```
-
-**Yanıt:**
-```json
-{
-  "message": "Kullanici basariyla olusturuldu!",
-  "user": {
-    "id": 1,
-    "username": "john_doe",
-    "email": "john@example.com"
-  },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-#### Kullanıcı Girişi
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "user@gmail.com",
-  "password": "user"
-}
-```
-
-**Yanıt:**
-```json
-{
-  "message": "Giris basarili! (Demo User)",
-  "user": {
-    "id": 100001,
-    "username": "user",
-    "email": "user@gmail.com",
-    "role": "user"
-  },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-> **Not:** Mock kullanıcılar için email: `"user@gmail.com"` (şifre: `"user"`) veya `"test@gmail.com"` (şifre: `"test"`)
+- `GET /swaps/reciprocal` - Karşılıklı beceri eşleşmelerini getir
+- `POST /api/messages` - Mesaj gönder
+- `GET /api/messages/conversations` - Tüm konuşmaları listele
+</details>
 
 ---
 
-### Kullanıcı Profili
+## 🧩 Proje Yapısı
 
-#### Profil Bilgilerini Getir
-```http
-GET /api/profile/:userId
-```
-
-#### Profil Ayarlarını Kaydet
-```http
-POST /api/profile/save-settings
-Content-Type: application/json
-
-{
-  "userId": 1,
-  "profileData": {
-    "bio": "string",
-    "location": "string",
-    ...
-  }
-}
-```
-
-#### Hesabı Sil
-```http
-DELETE /api/profile/delete-account/:userId
-```
-
----
-
-### Yetenekler (Skills)
-
-#### Tüm Yetenekleri Listele
-```http
-GET /api/skills
-```
-
-**Yanıt:**
-```json
-{
-  "success": true,
-  "skills": [
-    {
-      "id": 1,
-      "name": "JavaScript",
-      "category": "Programlama"
-    },
-    ...
-  ]
-}
-```
-
-#### Yeni Yetenek Ekle
-```http
-POST /api/skills
-Content-Type: application/json
-
-{
-  "name": "React",
-  "category": "Programlama"
-}
-```
-
-#### Yetenek Güncelle
-```http
-PUT /api/skills/:skillId
-Content-Type: application/json
-
-{
-  "name": "React Native",
-  "category": "Programlama"
-}
-```
-
-#### Yetenek Sil
-```http
-DELETE /api/skills/:skillId
-```
-
-#### Kategorileri Listele
-```http
-GET /api/categories
-```
-
----
-
-### Kullanıcı Becerileri (User Skills)
-
-#### Kullanıcının Becerilerini Getir
-```http
-GET /user-skills/:userId
-```
-
-**Yanıt:**
-```json
-{
-  "success": true,
-  "offering": [
-    {
-      "id": 1,
-      "skill_name": "JavaScript",
-      "skill_category": "Programlama",
-      "type": "Offering"
-    }
-  ],
-  "seeking": [
-    {
-      "id": 2,
-      "skill_name": "Python",
-      "skill_category": "Programlama",
-      "type": "Seeking"
-    }
-  ]
-}
-```
-
-#### Kullanıcıya Beceri Ekle
-```http
-POST /user-skills
-Content-Type: application/json
-
-{
-  "skill_id": 7,
-  "type": "Offering"
-}
-```
-> `type`: "Offering" (sunulan) veya "Seeking" (aranan)
-
-#### Kullanıcıdan Beceri Sil
-```http
-DELETE /user-skills/:id
-```
-
----
-
-### Karşılıklı Eşleşme (Reciprocal Matching)
-
-#### İki Yönlü Beceri Eşleşmelerini Getir
-```http
-GET /swaps/reciprocal
-```
-
-**Algoritma:**
-- Kullanıcı A'nın **Seeking** becerileri = Kullanıcı B'nin **Offering** becerileri
-- Kullanıcı B'nin **Seeking** becerileri = Kullanıcı A'nın **Offering** becerileri
-
-**Yanıt:**
-```json
-{
-  "success": true,
-  "matches_count": 2,
-  "matches": [
-    {
-      "id": 5,
-      "kullanici_adi": "jane_smith",
-      "email": "jane@example.com",
-      "matched_skills_a_needs": [
-        {
-          "skill_id": 8,
-          "skill_name": "Python",
-          "skill_category": "Programlama"
-        }
-      ],
-      "matched_skills_b_needs": [
-        {
-          "skill_id": 7,
-          "skill_name": "JavaScript",
-          "skill_category": "Programlama"
-        }
-      ]
-    }
-  ]
-}
-```
-
----
-
-### Projeler (Projects)
-
-#### Tüm Projeleri Listele
-```http
-GET /projects
-```
-
-#### Proje Detayı
-```http
-GET /projects/:id
-```
-
-#### Kullanıcının Projeleri
-```http
-GET /projects/my
-```
-
-#### Yeni Proje Oluştur
-```http
-POST /projects
-Content-Type: application/json
-
-{
-  "title": "Web Sitesi Geliştirme",
-  "description": "E-ticaret projesi için React developer aranıyor"
-}
-```
-
-#### Proje Güncelle
-```http
-PUT /projects/:id
-Content-Type: application/json
-
-{
-  "title": "Updated Title",
-  "description": "Updated Description"
-}
-```
-
-#### Proje Sil
-```http
-DELETE /projects/:id
-```
-
----
-
-### Başvurular (Matches)
-
-#### Kullanıcının Başvurularını Listele
-```http
-GET /matches/user
-```
-
-**Yanıt:**
-```json
-{
-  "success": true,
-  "applicantMatches": [],
-  "receivedMatches": []
-}
-```
-
-#### Projeye Başvur
-```http
-POST /matches
-Content-Type: application/json
-
-{
-  "project_id": 5
-}
-```
-
-#### Başvuru Durumu Güncelle
-```http
-PUT /matches/:id/status
-Content-Type: application/json
-
-{
-  "status": "Accepted"
-}
-```
-> `status`: "Pending", "Accepted", "Rejected"
-
-#### Başvuru Sil
-```http
-DELETE /matches/:id
-```
-
----
-
-### Dashboard
-
-#### Kullanıcı Görevleri
-
-**Devam Eden İşler:**
-```http
-GET /user/tasks?filter=ongoing
-```
-
-**Bekleyen Teklifler:**
-```http
-GET /user/tasks?filter=offers
-```
-
-**Önerilen Projeler:**
-```http
-GET /user/tasks?filter=suggestions
-```
-
----
-
-### Mesajlaşma (Messages)
-
-#### Yeni Mesaj Gönder
-```http
-POST /api/messages
-Content-Type: application/json
-
-{
-  "receiver_id": 5,
-  "content": "Merhaba, projeniz hakkında konuşabilir miyiz?"
-}
-```
-
-#### Tüm Konuşmaları Listele
-```http
-GET /api/messages/conversations
-```
-
-#### İki Kullanıcı Arasındaki Konuşmayı Getir
-```http
-GET /api/messages/conversation/:otherUserId
-```
-
----
-
-### Eşleşme İstekleri (Swap Requests)
-
-#### Eşleşme İsteği Gönder
-```http
-POST /swap-requests
-Content-Type: application/json
-
-{
-  "receiver_id": 5
-}
-```
-
-#### Gelen/Giden İstekleri Getir
-```http
-GET /swap-requests
-```
-
-**Yanıt:**
-```json
-{
-  "success": true,
-  "incoming": [],
-  "outgoing": [],
-  "accepted": []
-}
-```
-
-#### İstek Durumu Güncelle
-```http
-PUT /swap-requests/:id/status
-Content-Type: application/json
-
-{
-  "status": "Accepted"
-}
-```
-> `status`: "Accepted" veya "Rejected"
-
----
-
-### Admin Paneli
-
-#### Tüm Kullanıcıları Listele
-```http
-GET /api/admin/users
-```
-
-#### Kullanıcı Güncelle
-```http
-PUT /api/admin/users/:userId
-Content-Type: application/json
-
-{
-  "username": "new_username",
-  "email": "new_email@example.com"
-}
-```
-
-#### Kullanıcı Sil
-```http
-DELETE /api/admin/users/:userId
-```
-
----
-
-## 📱 Kullanım Senaryoları
-
-### 1. Hızlı Başlangıç (Mock Kullanıcı ile)
-1. Ana sayfada "Giriş Yap" butonuna tıklayın
-2. Email alanına: `user@gmail.com` yazın
-3. Şifre alanına: `user` yazın
-4. Giriş yapın ve platformu keşfedin!
-
-### 2. Yeni Kullanıcı Kaydı
-1. Ana sayfada "Kayıt Ol" butonuna tıklayın
-2. Kullanıcı adı, email ve şifre girin
-3. Otomatik olarak giriş yapılır ve token alınır
-
-### 3. Beceri Ekleme
-1. Profil sayfasına gidin
-2. "Offering" (Sunduğunuz beceriler) veya "Seeking" (Aradığınız beceriler) sekmesini seçin
-3. Beceri ekleyin
-
-### 4. Eşleşme Bulma
-1. "Discover" sayfasına gidin
-2. Karşılıklı eşleşen kullanıcıları görüntüleyin
-3. İlgilendiğiniz kullanıcıya eşleşme isteği gönderin
-
-### 5. Proje Oluşturma
-1. Dashboard'da "Yeni Proje" butonuna tıklayın
-2. Proje başlığı ve açıklama girin
-3. Diğer kullanıcılar projenize başvurabilir
-
-### 6. Mesajlaşma
-1. Eşleştiğiniz kullanıcıyla mesajlaşmak için "Messages" sayfasına gidin
-2. Konuşmayı başlatın veya devam ettirin
-
----
-
-## Proje Yapısı
-
-```
+```text
 swapsproject/
-├── backend/
-│   ├── config/
-│   │   └── database.js         # PostgreSQL bağlantı ayarları
-│   ├── controllers/
-│   │   ├── authController.js   # Kimlik doğrulama
-│   │   └── messageController.js # Mesajlaşma
-│   ├── middleware/
-│   │   └── auth.js              # JWT middleware
-│   ├── routes/
-│   │   ├── authroutes.js
-│   │   └── messageRoutes.js
-│   ├── index.js                 # Ana server dosyası
-│   └── package.json
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/          # React bileşenleri
-│   │   │   ├── Header.jsx
-│   │   │   ├── Login.jsx
-│   │   │   ├── Register.jsx
-│   │   │   ├── ProfilePage.jsx
-│   │   │   ├── Discover.jsx
-│   │   │   ├── MessagesPage.jsx
-│   │   │   └── ...
-│   │   ├── services/            # API servisleri
-│   │   │   ├── authService.js
-│   │   │   ├── skillsService.js
-│   │   │   └── swapsService.js
-│   │   ├── App.jsx              # Ana uygulama
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
-│
-└── README.md
+├── backend/             # Node.js Server & Business Logic
+│   ├── components/      # Auth, Messages, Skills components
+│   ├── config/          # DB connections
+│   └── middleware/      # JWT Security
+├── frontend/            # React Client
+│   ├── src/             # Components, Services, Hooks
+│   └── assets/          # Static files
+└── docker-compose.yml   # Multi-container orchestration
 ```
 
 ---
 
-## Hata Ayıklama
+## 🤝 Katkıda Bulunma
 
-### Backend bağlanamıyor?
-- Docker servilerinin çalıştığından emin olun: `docker ps`
-- Logları kontrol edin: `docker logs swaps-backend`
-- Port 3005'in (Backend) veya 5435'in (DB) başka bir uygulama tarafından kullanılmadığından emin olun.
-
-### Frontend backend'e bağlanamıyor?
-- Frontend artık Nginx üzerinden çalıştığı için `/api` isteklerini otomatik yönlendirir.
-- Tarayıcı önbelleğini temizlemeyi deneyin.
-- Hata alıyorsanız `docker-compose restart frontend` komutunu deneyin.
-
-### Token geçersiz hatası?
-- Token'ınızın süresi dolmuş olabilir, yeniden giriş yapın.
-- Veritabanı sıfırlandığı için eski tokenlar geçersizdir, yeniden kayıt olun.
+1. Bu repository'yi **Fork** edin.
+2. Feature branch oluşturun (`git checkout -b feature/YeniOzellik`).
+3. Değişikliklerinizi **Commit** edin (`git commit -m 'feat: Yeni özellik eklendi'`).
+4. Branch'inizi **Push** edin (`git push origin feature/YeniOzellik`).
+5. Bir **Pull Request** açın.
 
 ---
 
-## Katkıda Bulunma
+## 📄 Lisans
 
-Bu proje açık kaynaklıdır. Katkıda bulunmak için:
-
-1. Bu repository'yi fork edin
-2. Yeni bir branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'feat: Add amazing feature'`)
-4. Branch'inizi push edin (`git push origin feature/amazing-feature`)
-5. Pull Request açın
+Bu proje [MIT Lisansı](LICENSE) altında lisanslanmıştır.
 
 ---
 
-## Lisans
+## 👨‍💻 Yazar
 
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+**Bahattin Yunus Çetin**
+*IT Architect*
 
----
-
-## İletişim
-
-Proje ile ilgili sorularınız için:
-- **GitHub:** [yakuperoglu](https://github.com/yakuperoglu)
-- **Website:** [https://swaps.com.tr](https://swaps.com.tr)
+- **GitHub:** [@bahattinyunus](https://github.com/bahattinyunus)
+- **LinkedIn:** [Bahattin Yunus Çetin](https://linkedin.com/in/bahattinyunus)
+- **E-posta:** bahattinyunuscetin@gmail.com
 
 ---
-
-## Teşekkürler
-
-SwapS platformunu kullandığınız için teşekkür ederiz! Becerilerinizi paylaşarak öğrenme topluluğuna katkıda bulunun.
-
-**Happy Swapping!**
+<p align="center">
+  <i>"Bilgi paylaştıkça çoğalır."</i><br>
+  <b>Happy Swapping!</b>
+</p>
